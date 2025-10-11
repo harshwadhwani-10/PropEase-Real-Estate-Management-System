@@ -94,7 +94,7 @@ PropEase is a comprehensive property management system designed to streamline re
 
 PropEase also offers a mobile application for iOS and Android:
 
-- **iOS App**: Available on the [App Store](https://apps.apple.com/us/app/propease/id1440259082)
+- **iOS App**: Coming soon
 - **Android App**: Coming soon
 
 ## 🏗️ Project Structure
