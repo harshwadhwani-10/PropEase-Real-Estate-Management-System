@@ -158,20 +158,12 @@ We welcome contributions to PropEase! Please follow these steps:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🏢 Company Information
-
-**PropEase Technologies Pte Ltd**
-
-### Partnerships & Support
-- **Start It @KBC**: Business incubator
-- **Microsoft for Startups**: Corporate partnership
-- **Vlaamse Agentschap Innovatie & Ondernemen**: Public funding support
 
 ## 📞 Support & Contact
 
 For support, questions, or business inquiries:
 
-- **Email**: support@propease.com
+- **Email**: harshwadhwani268@gmail.com
 - **Website**: [PropEase Official Website](https://propease.com)
 - **Documentation**: [PropEase Docs](https://docs.propease.com)
 
