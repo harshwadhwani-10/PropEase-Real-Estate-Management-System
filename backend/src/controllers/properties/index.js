@@ -10,6 +10,7 @@ import { activityPropertyDescription } from "../../utils/activity/index.js"; // 
 import { sendTargetedNotification } from "../../websocket/index.js"; // ✅ FIXED
 import { ActivityType } from "../../enums/activity.js"; // ✅ FIXED
 import { SocketNotificationType } from "../../enums/notifications.js"; // ✅ FIXED
+import { io } from "../../index.js";
 
 const pump = util.promisify(pipeline);
 
@@ -35,11 +36,12 @@ export const createProperty = async (req, res) => {
     await user.save();
 
     if (activity)
-      sendTargetedNotification(SocketNotificationType.activity, activity, user_id);
+      sendTargetedNotification(io, SocketNotificationType.activity, activity, user_id);
 
     await newProperty.save();
     res.status(201).json({ data: newProperty });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: error.message });
   }
 };

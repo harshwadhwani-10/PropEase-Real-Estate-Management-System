@@ -6,26 +6,31 @@ import http from "http";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
+import morgan from "morgan";
+
 import corsMiddleware from "./cors.js";
 import { setStatic } from "./static.js";
 import { setSwagger } from "./swagger.js";
-import { initWebsocket, sendGeneralNotification, sendTargetedNotification } from "./websocket/index.js";
-import routes from "./routes/index.js"; // <- simple import of router
+import routes from "./routes/index.js";
+
+import {
+  initWebsocket,
+  sendGeneralNotification,
+  sendTargetedNotification,
+} from "./websocket/index.js";
 
 const app = express();
 const httpServer = http.createServer(app);
 
-// middlewares
+// 🧩 Middlewares
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 corsMiddleware(app);
 
-// Logger
-import morgan from "morgan";
 app.use(
-  morgan(function (tokens, req, res) {
+  morgan((tokens, req, res) => {
     return [
       tokens.method(req, res),
       tokens.url(req, res),
@@ -35,33 +40,33 @@ app.use(
   })
 );
 
-// serve static uploads
+// 📂 Serve static files (uploads)
 setStatic(app);
 
-// Swagger / API docs
+// 📘 Swagger / API Docs
 setSwagger(app);
 
-// Health check endpoint 
+// 🩺 Health Check
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", message: "Backend running!" });
 });
 
-// Mount routes under /api
-app.use("/api", routes);
+// 📦 Main routes
+app.use("/", routes);
 
-// Initialize websocket
+// ⚡ Initialize WebSocket (Socket.IO)
 const io = initWebsocket(httpServer);
 app.locals.sendGeneralNotification = sendGeneralNotification;
 app.locals.sendTargetedNotification = sendTargetedNotification;
 
-// error handler
+// 🧱 Error handler
 app.use((err, req, res, next) => {
   console.error(err);
   const status = err.status || 500;
   res.status(status).json({ error: err.message || "Internal Server Error" });
 });
 
-// MongoDB connection & server start
+// 🌿 Connect MongoDB and start server
 const MONGO_URI = process.env.DB_CONNECT || process.env.MONGO_URI;
 if (!MONGO_URI) {
   console.error("Missing DB_CONNECT / MONGO_URI env var");
@@ -69,16 +74,19 @@ if (!MONGO_URI) {
 }
 
 mongoose
-  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     const PORT = process.env.PORT || 5000;
     httpServer.listen(PORT, () => {
-      console.log(`PropEase backend listening on http://localhost:${PORT}`);
-      console.log(`Docs available at http://localhost:${PORT}/docs`);
+      console.log(`✅ PropEase backend running at http://localhost:${PORT}`);
+      console.log(`📘 Docs available at http://localhost:${PORT}/docs`);
     });
   })
   .catch((e) => {
-    console.error("MongoDB connection error:", e);
+    console.error("❌ MongoDB connection error:", e);
     process.exit(1);
   });
 

@@ -9,13 +9,14 @@ import {
   addImagesProperty,
   deleteImagesProperty,
 } from "../../controllers/properties/index.js";
+import { verifyToken } from "../../middlewares/auth.js";
 
 const router = express.Router();
 
 router.get("/", getProperties);
 router.get("/me", getMyProperties);
 router.get("/:id", getProperty);
-router.post("/", createProperty);
+router.post("/", verifyToken, createProperty);
 router.patch("/:id", updateProperty);
 router.delete("/:id", deleteProperty);
 router.post("/upload/images/:id", addImagesProperty);
