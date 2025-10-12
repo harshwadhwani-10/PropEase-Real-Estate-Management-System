@@ -58,7 +58,7 @@
     </div>
 
     <div class="price font-bold sm:text-[18px] mt-auto">
-      {{ property?.price | currency : "PHP" }}
+      {{ property?.price | currency : "INR" }}
       <span
         class="capitalize text-[16px]"
         *ngIf="property.transactionType === transactionType.forRent"

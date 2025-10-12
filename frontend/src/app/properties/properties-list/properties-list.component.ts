@@ -66,14 +66,14 @@ export class PropertiesListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    if (!this.propertiesService.properties.length) {
+    // Only load properties if none exist and not currently loading
+    if (!this.propertiesService.properties.length && !this.propertiesService.isLoading()) {
       this.getPropertiesList();
     }
   }
 
   public loadMoreProperty = debounce(async () => {
     console.log('load more...');
-    this.propertiesService.isLoading.set(true);
 
     const { hasMore } = await this.getPropertiesList();
     // if (!hasMore) {
@@ -81,19 +81,37 @@ export class PropertiesListComponent implements OnInit {
     // }
     await this.infinityScroll.complete();
     this.propertiesService.hasMore.set(hasMore);
-    this.propertiesService.isLoading.set(false);
   }, 1000);
 
   private async getPropertiesList(): Promise<{ hasMore: boolean }> {
-    const { sort, filter, search } = this.queryParams();
-    const res = await this.propertiesService.fetchProperties(
-      sort,
-      filter,
-      search
-    );
-    if (res.status !== 200) return;
-    const { items, hasMore, ...lastFetched } = res.data;
-    this.propertiesService.setPropertiesState(items, lastFetched);
-    return { hasMore };
+    // Prevent multiple simultaneous calls
+    if (this.propertiesService.isLoading()) {
+      return { hasMore: false };
+    }
+    
+    this.propertiesService.isLoading.set(true);
+    
+    try {
+      const { sort, filter, search } = this.queryParams();
+      const res = await this.propertiesService.fetchProperties(
+        sort,
+        filter,
+        search
+      );
+      
+      // Check if response has data property (successful response)
+      if (!res.data) {
+        console.error('No data in response:', res);
+        return { hasMore: false };
+      }
+      
+      const { items, hasMore, ...lastFetched } = res.data;
+      // Check if this is the first load (no existing properties)
+      const isFirstLoad = this.propertiesService.properties.length === 0;
+      this.propertiesService.setPropertiesState(items, lastFetched, isFirstLoad);
+      return { hasMore };
+    } finally {
+      this.propertiesService.isLoading.set(false);
+    }
   }
 }

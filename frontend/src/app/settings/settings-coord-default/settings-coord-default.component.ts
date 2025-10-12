@@ -12,7 +12,7 @@ import { StorageService } from 'src/app/shared/services/storage/storage.service'
 })
 export class SettingsCoordDefaultComponent implements OnInit {
 
-  public coord: Coord = { lat: 8.947416086535465, lng: 125.5451552207221 };
+  public coord: Coord = { lat: 23.187513, lng: 72.627859 };
 
   constructor(
     public toastController: ToastController,
@@ -39,7 +39,7 @@ export class SettingsCoordDefaultComponent implements OnInit {
   }
 
   async resetCoord() {
-    this.coord = { lat: 8.947416086535465, lng: 125.5451552207221 };
+    this.coord = { lat: 23.187513, lng: 72.627859 };
     this.storageService.setCoord(this.coord);
     const toast = await this.toastController.create({
       color: 'success',

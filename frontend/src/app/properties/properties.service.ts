@@ -96,10 +96,16 @@ export class PropertiesService {
           }>
         >(newUrl)
       );
+      // HttpClient returns the response body directly on success
       return res;
     } catch (error) {
-      console.error(error);
-      return error?.error || error;
+      console.error('Error fetching properties:', error);
+      // Return a proper error response structure
+      return {
+        status: error.status || 500,
+        data: null,
+        message: error.message || 'Failed to fetch properties'
+      };
     }
   }
 
@@ -256,12 +262,19 @@ export class PropertiesService {
       lastCreatedAt?: string;
       lastPrice?: string | number;
       lastName?: string;
-    }
+    },
+    isFirstLoad: boolean = false
   ) {
-    this.properties = [...this.properties, ...properties];
-    this.lastCreatedAt = last.lastCreatedAt ? last.lastCreatedAt : '';
-    this.lastPrice = last.lastPrice ? last.lastPrice : '';
-    this.lastName = last.lastName ? last.lastName : '';
+    // If this is the first load or explicitly marked as first load, replace properties
+    // Otherwise append for pagination
+    if (isFirstLoad || this.properties.length === 0) {
+      this.properties = [...properties];
+    } else {
+      this.properties = [...this.properties, ...properties];
+    }
+    this.lastCreatedAt = last?.lastCreatedAt ? last.lastCreatedAt : '';
+    this.lastPrice = last?.lastPrice ? last.lastPrice : '';
+    this.lastName = last?.lastName ? last.lastName : '';
     return;
   }
 }

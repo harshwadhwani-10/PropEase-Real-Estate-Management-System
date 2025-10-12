@@ -118,7 +118,12 @@ export class PropertiesPage implements OnInit {
     await modalPropertiesNew.present();
     const { data } = await modalPropertiesNew.onDidDismiss();
     if (data) {
-      this.presentUploadModal(data);
+      if (data.redirect) {
+        // Redirect to homepage after successful property creation
+        this.router.navigateByUrl('/map');
+      } else {
+        this.presentUploadModal(data);
+      }
     }
   }
 

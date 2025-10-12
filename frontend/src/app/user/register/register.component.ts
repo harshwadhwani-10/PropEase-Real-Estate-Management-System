@@ -75,7 +75,10 @@ export class RegisterComponent implements OnInit {
     if (!result.error) {
       loading.dismiss();
       await this.showToast('Success, registration is complete.');
-      await this.router.navigateByUrl('/user/account/profile');
+      // Small delay to ensure user state is updated before navigation
+      setTimeout(() => {
+        this.router.navigateByUrl('/user/account/profile');
+      }, 100);
       return;
     }
     await this.showToast('Error:' + result.error.message, 'danger');

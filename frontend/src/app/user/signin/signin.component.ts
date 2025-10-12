@@ -55,13 +55,21 @@ export class SigninComponent implements OnInit, AfterViewInit {
     const { email, password } = this.signinForm.value;
     const result = await this.user.signIn(email, password);
     
+    console.log('Sign-in result:', result);
     loading.dismiss();
 
-    if (result.status === 200) {
+    // Check if we have user data (successful sign-in)
+    if (result.data && result.data.accessToken) {
+      console.log('Sign-in successful, showing toast and navigating...');
       this.showToast('Success, You are logged in');
-      this.router.navigate(['/map'], { replaceUrl: true });
+      // Small delay to ensure user state is updated before navigation
+      setTimeout(() => {
+        console.log('Navigating to /map...');
+        this.router.navigate(['/map'], { replaceUrl: true });
+      }, 100);
     } else {
-      this.showToast(result.message, 'danger');
+      console.log('Sign-in failed:', result);
+      this.showToast(result.message || 'Sign-in failed', 'danger');
     }
   }
 
@@ -91,7 +99,10 @@ export class SigninComponent implements OnInit, AfterViewInit {
     const user = await this.user.googleAuth(response);
     if (user) {
       await this.showToast('Success, You are logged in');
-      this.router.navigateByUrl('/map');
+      // Small delay to ensure user state is updated before navigation
+      setTimeout(() => {
+        this.router.navigateByUrl('/map');
+      }, 100);
       loading.dismiss();
     }
   }
@@ -104,11 +115,13 @@ export class SigninComponent implements OnInit, AfterViewInit {
   }
 
   private async showToast(message, color = 'success') {
+    console.log('Showing toast:', message, color);
     const toast = await this.toastCtrl.create({
       message,
       duration: 2000,
       color,
     });
-    toast.present();
+    await toast.present();
+    console.log('Toast presented');
   }
 }

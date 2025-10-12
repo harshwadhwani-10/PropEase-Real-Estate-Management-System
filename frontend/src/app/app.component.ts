@@ -4,7 +4,7 @@ import { AlertController, Platform, ToastController } from '@ionic/angular';
 import { firstValueFrom, map } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
-import { UserDetails } from './shared/interface/user';
+import { UserDetails, UserSignedIn } from './shared/interface/user';
 
 import { ActivitiesService } from './activities/activities.service';
 import { EnquiriesService } from './enquiries/enquiries.service';
@@ -57,14 +57,14 @@ export class AppComponent implements OnInit {
     { initialValue: 0 }
   );
 
-  public user = signal<UserDetails>(undefined);
+  public user = signal<UserDetails | UserSignedIn>(undefined);
   public appLowerPages = computed<NavLinks[]>(() => {
     const pages =  [
       { title: 'About', url: '/about', icon: 'help-circle' },
     ]
     if(this.user()) {
       return [...pages,
-        { title: 'Account', url: '/user/account', icon: 'person'}
+        { title: 'Profile', url: '/user/account/profile', icon: 'person'}
       ];
     }
     return [...pages,
@@ -96,8 +96,9 @@ export class AppComponent implements OnInit {
       document.body.classList.add('dark');
     }
     this.userService.user$.subscribe((user) => {
+      console.log('User state changed:', user);
       if (!user) {
-        console.log('Unkown User...');
+        console.log('Unknown User...');
         this.user.set(undefined);
         this.webSocket.disconnect();
         this.enquiriesService.resetState();
@@ -106,6 +107,7 @@ export class AppComponent implements OnInit {
         return;
       }
       console.log('Connect verified user...');
+      this.user.set(user); // Set the user signal when authenticated
       this.webSocket.connect(this.userService.token);
       console.log('Fetching Enquiries...');
       if (!this.enquiriesService.initialFetchDone()) {

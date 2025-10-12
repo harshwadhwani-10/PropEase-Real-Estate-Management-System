@@ -95,7 +95,7 @@ export const properties: Property[] = [
     images: images1,
     updatedAt: new Date(),
     enquiries: ['12'],
-    currency: 'PHP',
+    currency: 'INR',
     features: ['Item 1', 'Item 2', 'Item 3', 'Item 4'],
     user_id: '01',
   },
@@ -113,7 +113,7 @@ export const properties: Property[] = [
     enquiries: [],
     price: 50000,
     images: images1,
-    currency: 'PHP',
+    currency: 'INR',
     features: [
       'Item 1',
       'Item 2',
@@ -139,7 +139,7 @@ export const properties: Property[] = [
     price: 30000,
     updatedAt: new Date('2021/08/25'),
     enquiries: ['351'],
-    currency: 'PHP',
+    currency: 'INR',
     features: [
       'Item 1',
       'Item 2',

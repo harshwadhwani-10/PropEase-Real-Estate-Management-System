@@ -90,7 +90,7 @@ export class PropertiesNewComponent implements OnInit {
       // Step 2
       price: ['',],
       paymentFrequency: [PaymentFrequency.monthly],
-      currency: ['PHP', [Validators.maxLength(3), Validators.pattern('^[a-zA-Z ]*$')]],
+      currency: ['INR', [Validators.maxLength(3), Validators.pattern('^[a-zA-Z ]*$')]],
       features: [''],
       lat: ['0', Validators.required],
       lng: ['0', Validators.required],
@@ -166,10 +166,13 @@ export class PropertiesNewComponent implements OnInit {
   private async addProperty(property: Property): Promise<void> {
     const res = await this.propertiesService.addProperty(property);
     if (res.status === 200 || res.status === 201) {
-      this.modalCtrl.dismiss(res.data);
       this.propertiesService.addPropertyToState(res.data);
+      this.presentToast(res.message, 'success');
+      // Dismiss modal and return data for redirect
+      this.modalCtrl.dismiss({ redirect: true, data: res.data });
+    } else {
+      this.presentToast(res.message, 'danger');
     }
-    this.presentToast(res.message, res.status !== 201 ? 'danger' : 'success');
   }
 
   private async presentToast(message: string, color = 'success', duration = 3000) {

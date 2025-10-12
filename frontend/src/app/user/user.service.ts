@@ -64,8 +64,12 @@ export class UserService {
       await this.setUser(result.data);
       return result;
     } catch (error) {
-      console.error('err', error);
-      return error.error;
+      console.error('Sign-in error:', error);
+      return {
+        status: error.status || 500,
+        data: null,
+        message: error.error?.message || error.message || 'Sign-in failed'
+      };
     }
   }
 
@@ -142,7 +146,7 @@ export class UserService {
   }
 
   public async setUser(user: UserSignedIn) {
-    this.userSub.next({ ...this.userSub.value, ...user });
+    this.userSub.next(user);
     await this.storage.setUser(user);
   }
 }

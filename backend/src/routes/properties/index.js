@@ -14,7 +14,7 @@ import { verifyToken } from "../../middlewares/auth.js";
 const router = express.Router();
 
 router.get("/", getProperties);
-router.get("/me", getMyProperties);
+router.get("/me", verifyToken, getMyProperties);
 router.get("/:id", getProperty);
 router.post("/", verifyToken, createProperty);
 router.patch("/:id", updateProperty);

@@ -32,7 +32,7 @@ export class MapLeafletComponent implements AfterViewInit, OnChanges {
     [PropertyType.industrial]: null,
     [PropertyType.land]: null
   };
-  private center = { lat: 8.947416086535465, lng: 125.5451552207221 };
+  private center = { lat: 23.187513, lng: 72.627859 };
   private markers: L.Marker[] = [];
   private pendingMarker = [];
 
