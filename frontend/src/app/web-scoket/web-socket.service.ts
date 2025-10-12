@@ -7,22 +7,14 @@ import { SocketNotificationType } from '../shared/enums/notification';
 import { ActivitiesService } from '../activities/activities.service';
 import { Activity } from '../shared/interface/activities';
 import { NotificationsService } from '../user/notifications/notifications.service';
+import { io, Socket } from 'socket.io-client';
 
-const parseMessage = (message: string) => {
-  try {
-    const parsedMessage = JSON.parse(message);
-    return parsedMessage;
-  } catch (error) {
-    return message.toString();
-  }
-};
 @Injectable({
   providedIn: 'root',
 })
 export class WebSocketService {
-  private socket: WebSocket;
-  public messages: string[] = [];
-
+  private socket: Socket;
+  
   constructor(
     private enquiry: EnquiriesService,
     private activities: ActivitiesService,
@@ -30,62 +22,70 @@ export class WebSocketService {
   ) {}
 
   connect(token?: string): void {
-    this.socket = new WebSocket(
-      `${environment.api.webSocketUrl}?userToken=${token}`
-    );
+    if (!token) {
+      console.error('WebSocket: No user token provided!');
+      return;
+    }
 
-    this.socket.onopen = () => {
-      console.log('WebSocket connection established.');
-    };
+    // Connect using Socket.IO
+    this.socket = io(environment.api.webSocketUrl, {
+      auth: { token },
+      transports: ['websocket'],
+    });
 
-    this.socket.onmessage = (event: MessageEvent) => {
-      const message = event.data;
-      // console.log('Received message:', parseMessage(message));
-      this.handleNotification(parseMessage(message));
-      this.messages.push(message);
-    };
+    this.socket.on('connect', () => {
+      console.log('Socket.IO connected:', this.socket.id);
+    });
 
-    this.socket.onclose = (event) => {
-      console.log('WebSocket connection closed:', event);
-    };
+    this.socket.on('disconnect', (reason: string) => {
+      console.log('Socket.IO disconnected:', reason);
+    });
 
-    this.socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
+    this.socket.on('connect_error', (error: any) => {
+      console.error('Socket.IO connection error:', error);
+    });
+
+    // Listen for server notifications
+    this.socket.on('notification', (data: WebSocketNotification) => {
+      this.handleNotification(data);
+    });
   }
 
-  send(message: string): void {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(message);
+  send(type: string, payload: any): void {
+    if (this.socket && this.socket.connected) {
+      this.socket.emit('notification', { type, payload });
     } else {
-      console.error('WebSocket connection is not open.');
+      console.error('Socket.IO is not connected.');
     }
   }
 
   disconnect(): void {
     if (this.socket) {
-      this.socket.close();
+      this.socket.disconnect();
       this.socket = null;
     }
   }
 
-  handleNotification(notfication: WebSocketNotification): void {
-    console.log("handleNotification");
-    switch (notfication.type) {
+  private handleNotification(notification: WebSocketNotification): void {
+    console.log('handleNotification', notification.type);
+
+    switch (notification.type) {
       case SocketNotificationType.Activity:
-        this.activities.insertActivities(notfication.payload as Activity)
+        this.activities.insertActivities(notification.payload as Activity);
         break;
 
       case SocketNotificationType.Enquiry:
-        this.enquiry.insertEnquiryToState(notfication.payload as Enquiry);
+        this.enquiry.insertEnquiryToState(notification.payload as Enquiry);
         break;
-      
+
       case SocketNotificationType.User:
-        this.notificationService.insertNotificationToState(notfication.payload as Notification)
+        this.notificationService.insertNotificationToState(
+          notification.payload as Notification
+        );
         break;
 
       default:
-        console.error('Unkown Notification type', notfication.type);
+        console.error('Unknown Notification type', notification.type);
         break;
     }
   }

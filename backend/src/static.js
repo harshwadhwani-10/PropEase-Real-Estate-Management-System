@@ -12,7 +12,11 @@ const __dirname = path.dirname(__filename);
 export const setStatic = async function (app) {
   const uploadsPath = path.join(__dirname, "..", "uploads");
   app.use("/uploads", (req, res, next) => {
-    // optional: any access control can be added here
+    // Set CORS headers for uploaded files
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
   });
   app.use("/uploads", (await import("express")).default.static(uploadsPath));

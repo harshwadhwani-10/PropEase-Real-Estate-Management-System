@@ -11,23 +11,29 @@ import { userIdToken } from "../utils/users.js";
 export function initWebsocket(httpServer) {
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: (process.env.CLIENT_URL || "").split(",").map(s => s.trim()).filter(Boolean).length ? (process.env.CLIENT_URL || "").split(",").map(s => s.trim()) : ["http://localhost:5173"],
+      origin: (process.env.CLIENT_URL || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean).length
+        ? (process.env.CLIENT_URL || "").split(",").map((s) => s.trim())
+        : ["http://localhost:5173"],
       methods: ["GET", "POST"],
       credentials: true,
     },
   });
 
-  // attach a map from socket.id -> userId for quick lookup (optional)
+  // Map from userId -> Set of socket IDs
   io.userSocketMap = new Map();
 
   io.on("connection", (socket) => {
-    // If client passed userToken as query param, decode and attach userId
-    const { userToken } = socket.handshake.query || {};
-    if (userToken) {
+    // Read token from handshake auth
+    const { token } = socket.handshake.auth || {};
+    if (token) {
       try {
-        const uid = userIdToken(userToken.toString());
+        const uid = userIdToken(token.toString());
         socket.userId = uid;
-        // track mapping (many sockets per user possible)
+
+        // Track mapping (many sockets per user possible)
         const existing = io.userSocketMap.get(uid) || new Set();
         existing.add(socket.id);
         io.userSocketMap.set(uid, existing);
@@ -47,7 +53,6 @@ export function initWebsocket(httpServer) {
     });
 
     socket.on("message", (msg) => {
-      // try parse JSON like original parseMessage helper
       let parsed;
       try {
         parsed = typeof msg === "string" ? JSON.parse(msg) : msg;
@@ -106,5 +111,4 @@ export function sendGeneralNotification(io, type, payload) {
   io.emit("notification", { type, payload });
 }
 
-// Backwards-compatible default export: caller can import and call initWebsocket(httpServer)
-// Note: to use helpers elsewhere, import { sendTargetedNotification, sendGeneralNotification } and pass the `io` instance.
+// Default export: caller can import and call initWebsocket(httpServer)

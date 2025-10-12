@@ -122,7 +122,7 @@ export class PropertiesPage implements OnInit {
         // Redirect to homepage after successful property creation
         this.router.navigateByUrl('/map');
       } else {
-        this.presentUploadModal(data);
+        this.presentUploadModal(data.data);
       }
     }
   }
@@ -175,10 +175,25 @@ export class PropertiesPage implements OnInit {
   }
 
   private async presentUploadModal(property: Property) {
+    if (!property || !property.property_id) {
+      console.error('Invalid property object:', property);
+      const toast = await this.toastCtrl.create({
+        message: 'Error: Invalid property data. Cannot upload images.',
+        duration: 3000,
+        color: 'danger',
+      });
+      await toast.present();
+      return;
+    }
     const modalUploads = await this.modalController.create({
       component: PropertiesUploadsComponent,
       componentProps: { property },
     });
     await modalUploads.present();
+    const { data } = await modalUploads.onDidDismiss();
+    if (data && data.redirect) {
+      // Redirect to map after image upload or skip
+      this.router.navigateByUrl('/map');
+    }
   }
 }

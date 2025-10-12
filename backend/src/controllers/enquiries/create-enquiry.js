@@ -14,6 +14,7 @@ import { activityEnquiryDescription } from "../../utils/activity/index.js";
  */
 export const createEnquiry = async function (req, res) {
   const { title, content, topic, email, userTo, property } = req.body;
+  console.log('Controller1 hit', req.body);
   if (!title || !content || !topic || !email || !userTo) {
     return res.status(400).send({ message: "Some fields are missing!" });
   }

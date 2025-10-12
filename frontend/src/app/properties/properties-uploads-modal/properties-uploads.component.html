@@ -54,11 +54,20 @@
       <ion-button
         color="primary"
         expand="block"
-        class=""
+        class="mb-2"
         id="uploadBtn"
         (click)="upload()"
+        [disabled]="!selectedFiles || selectedFiles.length === 0"
       >
         Upload Image
+      </ion-button>
+      <ion-button
+        color="medium"
+        expand="block"
+        fill="outline"
+        (click)="skipUpload()"
+      >
+        Skip & Go to Map
       </ion-button>
     </section>
 

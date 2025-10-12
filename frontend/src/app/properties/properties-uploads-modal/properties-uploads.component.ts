@@ -53,6 +53,9 @@ export class PropertiesUploadsComponent implements OnInit {
     if (!this.selectedFiles) {
       return this.presentToast('Please, select images to upload.', 300, 'danger');
     }
+    if (!this.property || !this.property.property_id) {
+      return this.presentToast('Error: Property ID is missing. Cannot upload images.', 3000, 'danger');
+    }
     const res = await this.propertiesService
       .addPropertyImage(this.selectedFiles, this.property.property_id);
     if (!res || res.status !== 201) {
@@ -64,7 +67,11 @@ export class PropertiesUploadsComponent implements OnInit {
     this.property.images = res.data;
     this.propertiesService.updateProperty(this.property);
     this.presentToast(res.message || 'Success: Image uploaded');
-    this.modalCtrl.dismiss();
+    this.modalCtrl.dismiss({ redirect: true });
+  }
+
+  public skipUpload() {
+    this.modalCtrl.dismiss({ redirect: true });
   }
 
   public removeFile(index: number) {

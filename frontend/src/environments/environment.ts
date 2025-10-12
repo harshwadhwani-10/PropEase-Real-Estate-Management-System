@@ -8,7 +8,7 @@ export const environment = {
     server: 'http://localhost:8000/',
     mapKey: '',
     googleAuthClientId: '',
-    webSocketUrl: 'ws://localhost:8000/websocket',
+    webSocketUrl: 'http://localhost:8000',
   },
   map: {
     // Add the map tiles to show base on theme

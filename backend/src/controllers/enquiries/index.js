@@ -6,8 +6,12 @@ import { SocketNotificationType } from "../../enums/notifications.js";
 import { addActivity } from "../../services/activity.js";
 import { ActivityType } from "../../enums/activity.js";
 import { activityEnquiryDescription } from "../../utils/activity/index.js";
+import { io } from "../../index.js"
 
 export const createEnquiry = async (req, res) => {
+  console.log('Controller2 hit', req.body);
+  console.log('Logged-in user:', req.user?.id);
+  console.log('Target user:', req.body.userTo);
   const { title, content, topic, email, userTo, property } = req.body;
   if (!title || !content || !topic || !email || !userTo)
     return res.status(400).send({ message: "Some fields are missing!" });
@@ -32,8 +36,12 @@ export const createEnquiry = async (req, res) => {
         from: { user_id: userFrom, keep: true },
         to: { user_id: userTo, keep: true },
       },
-      property,
-      ...req.body,
+      property, // from backend
+      title: req.body.title,
+      content: req.body.content,
+      topic: req.body.topic,
+      email: req.body.email,
+      ...(req.body.replyTo ? { replyTo: req.body.replyTo } : {}),
     });
 
     await newEnquiry.save();
@@ -51,12 +59,14 @@ export const createEnquiry = async (req, res) => {
 
     if (activity)
       sendTargetedNotification(
+        io,
         SocketNotificationType.activity,
         activity,
         userFrom
       );
 
     sendTargetedNotification(
+      io,
       SocketNotificationType.enquiry,
       newEnquiry,
       userTo
@@ -64,7 +74,8 @@ export const createEnquiry = async (req, res) => {
 
     return res.status(201).send({ data: newEnquiry });
   } catch (error) {
-    return res.status(400).send(error);
+    console.error('Enquiry save error:', error);
+    return res.status(400).send({ message: error.message, details: error.errors });
   }
 };
 

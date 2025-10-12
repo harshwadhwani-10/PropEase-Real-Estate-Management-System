@@ -165,13 +165,14 @@ export class PropertiesNewComponent implements OnInit {
 
   private async addProperty(property: Property): Promise<void> {
     const res = await this.propertiesService.addProperty(property);
-    if (res.status === 200 || res.status === 201) {
+    // Check if response has data (success) or error message
+    if (res && res.data) {
       this.propertiesService.addPropertyToState(res.data);
-      this.presentToast(res.message, 'success');
-      // Dismiss modal and return data for redirect
-      this.modalCtrl.dismiss({ redirect: true, data: res.data });
+      this.presentToast(res.message || 'Property created successfully', 'success');
+      // Dismiss modal and return data for image upload modal
+      this.modalCtrl.dismiss({ redirect: false, data: res.data });
     } else {
-      this.presentToast(res.message, 'danger');
+      this.presentToast(res.message || 'Error: Failed to create property', 'danger');
     }
   }
 

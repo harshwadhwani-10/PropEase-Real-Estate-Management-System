@@ -3,6 +3,7 @@ import path from "path";
 import util from "util";
 import { pipeline } from "stream";
 import { v4 as uuidv4 } from "uuid";
+import { fileURLToPath } from "url";
 import { Property } from "../../models/property.js";
 import { User } from "../../models/user.js";
 import { addActivity } from "../../services/activity.js";
@@ -13,6 +14,8 @@ import { SocketNotificationType } from "../../enums/notifications.js"; // ✅ FI
 import { io } from "../../index.js";
 
 const pump = util.promisify(pipeline);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const createProperty = async (req, res) => {
   const { name, address, type, position } = req.body;
@@ -39,7 +42,10 @@ export const createProperty = async (req, res) => {
       sendTargetedNotification(io, SocketNotificationType.activity, activity, user_id);
 
     await newProperty.save();
-    res.status(201).json({ data: newProperty });
+    res.status(201).json({ 
+      message: "Property created successfully", 
+      data: newProperty 
+    });
   } catch (error) {
     console.log(error)
     res.status(500).json({ message: error.message });
@@ -213,24 +219,34 @@ export const addImagesProperty = async (req, res) => {
     if (property.user_id !== req.user.id)
       return res.status(401).json({ message: "Error: you do not own the property." });
 
-    const parts = req.files;
-    if (!parts || parts.length === 0)
+    const files = req.files;
+    if (!files || files.length === 0)
       return res.status(400).json({ message: "No images uploaded." });
 
-    for (const data of parts) {
-      const imgName = Date.now() + "-" + data.originalname;
-      fs.statSync("uploads/");
-      await pump(
-        data.stream,
-        fs.createWriteStream(path.join(process.cwd(), "uploads", imgName))
-      );
+    for (const file of files) {
+      const imgName = Date.now() + "-" + file.originalname;
+      const uploadsDir = path.join(__dirname, "..", "uploads");
+      const uploadPath = path.join(uploadsDir, imgName);
+      
+      // Ensure uploads directory exists
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      
+      // Write file to disk
+      fs.writeFileSync(uploadPath, file.buffer);
+      
       const image = `${req.protocol}://${req.headers.host}/uploads/${imgName}`;
       property.images.push(image);
     }
 
     await property.save();
-    res.status(201).json({ data: property.images });
+    res.status(201).json({ 
+      message: "Images uploaded successfully",
+      data: property.images 
+    });
   } catch (error) {
+    console.error('Image upload error:', error);
     res.status(500).json({ message: error.message });
   }
 };

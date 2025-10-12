@@ -133,7 +133,7 @@ export class AppComponent implements OnInit {
     const alert = await this.alertController.create({
       cssClass: 'my-custom-class',
       header: 'Are you sure?',
-      message: 'You will be Signed out!!!',
+      message: 'You will be signed out!',
       buttons: [
         {
           text: 'Cancel',

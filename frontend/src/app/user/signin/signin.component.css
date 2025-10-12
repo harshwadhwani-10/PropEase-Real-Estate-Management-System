@@ -32,7 +32,7 @@ ion-content {
   margin-top: 36px;
   display: flex;
   justify-content: center;
-  text-transform: uppercase;
+  
 }
 .ask-register a {
   margin-left: 6px;

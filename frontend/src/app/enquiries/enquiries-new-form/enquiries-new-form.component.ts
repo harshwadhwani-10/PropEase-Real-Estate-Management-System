@@ -78,8 +78,13 @@ export class EnquiriesNewFormComponent {
     const enquiryForm = {
       userTo: this.userTo,
       ...this.enquiryForm.value,
+      property: {
+        property_id: this.property.property_id,
+        name: this.property.name,
+      },
       ...(this.replyTo ? { replyTo: this.replyTo } : ''),
     };
+    console.log('Enquiry payload:', enquiryForm);
 
     const res = await this.enquiriesService.createEnquiry(
       enquiryForm,

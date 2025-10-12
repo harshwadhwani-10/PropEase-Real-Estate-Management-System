@@ -105,12 +105,12 @@ export class PropertiesDetailComponent implements OnInit {
 
   private setPropertyDetails(id: string): void {
     this.propertiesService.fetchProperty(id).then((res) => {
-      if (res.status === 200) {
+    
         this.property.set(res.data);
         if (this.propertiesGallery) {
           this.propertiesGallery.setImage();
         }
-      }
+      
     }).finally(() => this.ready.set(true))
   }
 

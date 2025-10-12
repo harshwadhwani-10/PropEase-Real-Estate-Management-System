@@ -47,7 +47,10 @@ export const createProperty = async function (req, res) {
       sendTargetedNotification(SocketNotificationType.activity, activity, user_id);
     }
     await newProperty.save();
-    return res.status(201).send({ data: newProperty });
+    return res.status(201).send({ 
+      message: "Property created successfully", 
+      data: newProperty 
+    });
   } catch (error) {
     return res.send(error);
   }
