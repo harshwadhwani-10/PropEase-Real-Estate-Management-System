@@ -11,6 +11,7 @@ import { EnquiriesService } from '../enquiries.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RestrictionService } from 'src/app/shared/services/restriction/restriction.service';
 
+
 @Component({
     selector: 'app-enquiries-detail',
     templateUrl: './enquiries-detail.component.html',
@@ -153,8 +154,10 @@ export class EnquiriesDetailComponent implements OnInit {
 
   private async setEnquiryDetails(): Promise<void> {
     const res = await this.enquiriesService.fetchEnquiry(this.paramId().get('id'));
-    if (res.status === 200) {
+    
       this.enquiry.set(res.data);
+    if(!res.status){
+      console.warn('Error fetching enquiry', res);
     }
   }
 }

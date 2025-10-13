@@ -49,6 +49,10 @@ export class EnquiriesService {
           requestOptions({ token: this.userService.token })
         )
       );
+        if (res && res.data) {
+        this.enquiriesSub.next(res.data);  // <-- ✅ critical line
+        this.initialFetchDone.set(true);
+    }
       return res;
     } catch (error) {
       console.error(error);
