@@ -1,0 +1,27 @@
+import { useLocation } from "react-router-dom";
+import Header from "./Header";
+import Footer from "./Footer";
+
+export default function Layout({ children }) {
+  const location = useLocation();
+  
+  // Hide header and footer on dashboard pages
+  const hideHeaderFooter = 
+    location.pathname.startsWith("/owner/") || 
+    location.pathname.startsWith("/admin/");
+  
+  if (hideHeaderFooter) {
+    return <>{children}</>;
+  }
+  
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-grow">
+        {children}
+      </main>
+      <Footer />
+    </div>
+  );
+}
+

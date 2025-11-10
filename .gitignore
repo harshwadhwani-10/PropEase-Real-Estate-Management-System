@@ -1,5 +1,7 @@
-# Logs
-logs
+# ───────────────────────────────
+# 🔹 LOG FILES
+# ───────────────────────────────
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,65 +9,98 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependency directories
+# ───────────────────────────────
+# 🔹 DEPENDENCIES
+# ───────────────────────────────
 node_modules/
 client/node_modules/
 
-# Build output
+# ───────────────────────────────
+# 🔹 BUILD OUTPUT
+# ───────────────────────────────
 dist/
 dist-ssr/
-client/dist/
 build/
+client/dist/
 
-# Local environment files
+# ───────────────────────────────
+# 🔹 ENVIRONMENT & CONFIG
+# ───────────────────────────────
 .env
+.env.*
 client/.env
+client/.env.*
+*.env.local
+*.development.local
+*.production.local
+*.local
 
-# Editor directories and files
+# ───────────────────────────────
+# 🔹 UPLOADS & TEMP FILES
+# ───────────────────────────────
+uploads/
+tmp/
+temp/
+*.tmp
+*.seed
+*.pid
+*.pid.lock
+
+# ───────────────────────────────
+# 🔹 EDITOR / SYSTEM FILES
+# ───────────────────────────────
 .vscode/*
 !.vscode/extensions.json
 .idea/
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# System / Temp files
-Thumbs.db
-*.tmp
-
-# Cache and coverage
+# ───────────────────────────────
+# 🔹 CACHE & COVERAGE
+# ───────────────────────────────
 .cache/
 coverage/
-*.pid
-*.seed
-*.pid.lock
 
-# Local configuration
-*.local
-*.env.local
-*.development.local
-*.production.local
-
-# Sensitive or generated files
+# ───────────────────────────────
+# 🔹 SENSITIVE / LOCAL FILES
+# ───────────────────────────────
 cookies.txt
 admin_cookies.txt
 AUDIT_SUMMARY.json
 PHASE_0_FIXES_SUMMARY.md
 PHASE_1_IMPLEMENTATION_SUMMARY.md
+PHASE_2_IMPLEMENTATION_SUMMARY.md
+PHASE_2.1_IMPLEMENTATION_SUMMARY.md
 PROJECT_AUDIT_REPORT.md
 SEEDER_DOCUMENTATION.md
+OWNER_ADMIN_PANEL_FIXES.md
+IMPLEMENTATION_REPORT.md
+GOOGLE_AUTH_SETUP_GUIDE.md
 texts/
 printFolder.js
 
-# Lock files (optional, if using only one package manager)
-# Uncomment if you don't want to commit them:
+# ───────────────────────────────
+# 🔹 PACKAGE MANAGER LOCK FILES
+# ───────────────────────────────
+# Uncomment the ones you don’t want to commit
 # package-lock.json
 # client/package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
 
-# Firebase config (if auto-generated)
+# ───────────────────────────────
+# 🔹 FIREBASE / LOCAL CONFIGS
+# ───────────────────────────────
 client/src/firebase.js
+
+# ───────────────────────────────
+# 🔹 BACKUP FILES
+# ───────────────────────────────
+*.bak
+*.old
+*.backup

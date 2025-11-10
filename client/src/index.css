@@ -2,6 +2,189 @@
 @tailwind components;
 @tailwind utilities;
 
-body{
-    background-color: rgb(241, 245, 241);
+body {
+  background-color: #F9FAFB;
+  font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth Scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A4365;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1e2f47;
+}
+
+/* Swiper Navigation Customization for Featured Listings */
+.featured-swiper .swiper-button-next,
+.featured-swiper .swiper-button-prev {
+  color: #2A4365 !important;
+  background: white !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+  margin-top: -22px !important;
+}
+
+.featured-swiper .swiper-button-next:after,
+.featured-swiper .swiper-button-prev:after {
+  font-size: 18px !important;
+  font-weight: bold !important;
+}
+
+.featured-swiper .swiper-button-next:hover,
+.featured-swiper .swiper-button-prev:hover {
+  background: #2A4365 !important;
+  color: white !important;
+}
+
+.featured-swiper .swiper-button-next {
+  right: 10px !important;
+}
+
+.featured-swiper .swiper-button-prev {
+  left: 10px !important;
+}
+
+/* Hide navigation buttons on mobile */
+@media (max-width: 640px) {
+  .featured-swiper .swiper-button-next,
+  .featured-swiper .swiper-button-prev {
+    display: none !important;
+  }
+}
+
+/* Testimonials Swiper Pagination */
+.testimonials-swiper .swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.5) !important;
+  opacity: 1 !important;
+  width: 12px !important;
+  height: 12px !important;
+}
+
+.testimonials-swiper .swiper-pagination-bullet-active {
+  background: #F6AD55 !important;
+  width: 32px !important;
+  border-radius: 6px !important;
+}
+
+/* Fade-in Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+/* Line Clamp Utility */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Button Utilities */
+.btn-primary {
+  @apply bg-[#2A4365] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#1e2f47] transition-colors shadow-lg;
+}
+
+.btn-outline {
+  @apply border-2 border-[#2A4365] text-[#2A4365] px-6 py-3 rounded-xl font-semibold hover:bg-[#2A4365] hover:text-white transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-colors;
+}
+
+/* Swiper Thumbnail Styles */
+.thumbnail-swiper .swiper-slide {
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.thumbnail-swiper .swiper-slide-thumb-active {
+  opacity: 1;
+}
+
+/* Main Swiper Navigation */
+.main-swiper .swiper-button-next,
+.main-swiper .swiper-button-prev {
+  color: white;
+  background: rgba(42, 67, 101, 0.8);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-top: -25px;
+}
+
+.main-swiper .swiper-button-next:after,
+.main-swiper .swiper-button-prev:after {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.main-swiper .swiper-button-next:hover,
+.main-swiper .swiper-button-prev:hover {
+  background: rgba(42, 67, 101, 1);
+}
+
+.main-swiper .swiper-button-next {
+  right: 20px;
+}
+
+.main-swiper .swiper-button-prev {
+  left: 20px;
+}
+
+/* Hide number input spinner buttons */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Ensure number inputs stay within container */
+input[type="number"] {
+  max-width: 100%;
+  box-sizing: border-box;
 }

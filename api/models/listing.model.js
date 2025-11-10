@@ -66,9 +66,31 @@ const listingSchema = new mongoose.Schema(
     approvedAt: {
       type: Date,
     },
+    documents: {
+      type: [String],
+      default: [],
+    },
+    virtualTourUrl: {
+      type: String,
+      default: "",
+    },
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        default: [0, 0], // [longitude, latitude]
+      },
+    },
   },
   { timestamps: true }
 );
+
+// Create 2dsphere index for geospatial queries
+listingSchema.index({ location: "2dsphere" });
 
 const Listing = mongoose.model("Listing", listingSchema);
 
