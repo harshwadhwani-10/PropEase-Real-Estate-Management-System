@@ -5,6 +5,7 @@ import { MapPin, Bed, Bath, Car, Sofa, Shield, CheckCircle } from "lucide-react"
 import ImageGallery from "../components/listing/ImageGallery";
 import InfoCard from "../components/listing/InfoCard";
 import PropertyCard from "../components/listing/PropertyCard";
+import PropertyLocationMap from "../components/listing/PropertyLocationMap";
 import InquiryModal from "../components/InquiryModal";
 import SectionHeader from "../components/common/SectionHeader";
 import api from "../utils/api";
@@ -192,6 +193,15 @@ export default function Listing() {
                   </p>
                 </div>
               </div>
+            </motion.div>
+
+            {/* Property Location Map */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <PropertyLocationMap listing={listing} />
             </motion.div>
           </div>
 

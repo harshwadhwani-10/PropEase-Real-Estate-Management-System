@@ -3,7 +3,7 @@ import { GoogleAuthProvider, getAuth, signInWithPopup } from "firebase/auth";
 import { app } from "../firebase";
 import { useDispatch } from "react-redux";
 import { signInSuccess } from "../redux/user/userSlice";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import api from "../utils/api";
 import { FaGoogle } from "react-icons/fa";
 
@@ -11,6 +11,8 @@ export default function OAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const nextUrl = searchParams.get("next");
   const [loading, setLoading] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState("buyer");
@@ -37,7 +39,9 @@ export default function OAuth() {
           });
           const data = signInRes.data;
           dispatch(signInSuccess(data));
-          navigate("/");
+          // Redirect to next URL if provided, otherwise go to home
+          const redirectTo = nextUrl || "/";
+          navigate(redirectTo);
         } else {
           // User doesn't exist, show role selection modal
           setGoogleUser({
@@ -68,7 +72,9 @@ export default function OAuth() {
             });
             const data = signInRes.data;
             dispatch(signInSuccess(data));
-            navigate("/");
+            // Redirect to next URL if provided, otherwise go to home
+            const redirectTo = nextUrl || "/";
+            navigate(redirectTo);
           } catch (signInError) {
             console.error("Sign-in error:", signInError);
             alert(signInError.response?.data?.message || "Failed to sign in with Google");
@@ -107,7 +113,9 @@ export default function OAuth() {
       const data = res.data;
       dispatch(signInSuccess(data));
       setShowRoleModal(false);
-      navigate("/");
+      // Redirect to next URL if provided, otherwise go to home
+      const redirectTo = nextUrl || "/";
+      navigate(redirectTo);
     } catch (error) {
       console.error("Error creating user with Google:", error);
       alert(error.response?.data?.message || "Failed to create account");

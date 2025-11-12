@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
-import { MapPin, Bed, Bath, Car, Sofa, Share2, Mail, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { MapPin, Bed, Bath, Car, Sofa, Share2, Mail, User, Edit } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useState } from "react";
 
 export default function InfoCard({ listing, onInquire }) {
   const { currentUser } = useSelector((state) => state.user);
   const [copied, setCopied] = useState(false);
+  const location = useLocation();
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -167,7 +168,7 @@ export default function InfoCard({ listing, onInquire }) {
         {!currentUser && (
           <>
             <Link
-              to="/sign-in"
+              to={`/sign-in?next=${encodeURIComponent(location.pathname)}`}
               className="block w-full bg-[#2A4365] text-white rounded-xl hover:bg-[#1e2f47] p-4 font-semibold transition-colors text-center shadow-lg"
             >
               Sign In to Inquire
@@ -187,9 +188,18 @@ export default function InfoCard({ listing, onInquire }) {
           </button>
         )}
         {isOwner && (
-          <p className="text-sm text-gray-500 text-center py-2">
-            This is your own listing
-          </p>
+          <div className="space-y-3">
+            <Link
+              to={`/owner/edit-listing/${listing._id}`}
+              className="w-full bg-gradient-to-r from-[#2A4365] to-[#1e2f47] text-white rounded-xl hover:shadow-xl p-4 font-semibold transition-all flex items-center justify-center gap-2 shadow-lg transform hover:-translate-y-0.5"
+            >
+              <Edit className="w-5 h-5" />
+              Edit Listing
+            </Link>
+            <p className="text-sm text-gray-500 text-center">
+              This is your own listing
+            </p>
+          </div>
         )}
       </div>
     </motion.div>

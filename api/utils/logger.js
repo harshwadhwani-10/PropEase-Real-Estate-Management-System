@@ -3,26 +3,21 @@ import morgan from "morgan";
 import fs from "fs";
 import path from "path";
 
-/**
- * Custom request logging setup using Morgan
- * Logs clean, timestamped requests to both console & file
- */
-
 const __dirname = path.resolve();
 
-// 📁 Ensure logs directory exists
+// Ensure logs directory exists
 const logDirectory = path.join(__dirname, "logs");
 if (!fs.existsSync(logDirectory)) {
   fs.mkdirSync(logDirectory);
 }
 
-// 🧾 Create write stream for file logs (append mode)
+// Create write stream for file logs (append mode)
 const accessLogStream = fs.createWriteStream(
   path.join(logDirectory, "access.log"),
   { flags: "a" }
 );
 
-// 🎨 Define custom Morgan format
+// Define custom Morgan format
 const customFormat = (tokens, req, res) => {
   const timestamp = new Date().toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -42,15 +37,16 @@ const customFormat = (tokens, req, res) => {
   ].join(" ");
 };
 
-// 🧩 Create morgan middlewares
-export const logger = {
-  // Logs to console (readable)
-  console: morgan(customFormat, {
-    skip: (req, res) => process.env.NODE_ENV === "production", // Skip console logs in prod
-  }),
-
-  // Logs to file (persistent)
-  file: morgan(customFormat, {
-    stream: accessLogStream,
-  }),
-};
+/**
+ * Unified logger — logs to both console & file simultaneously
+ */
+export const logger = morgan(customFormat, {
+  stream: {
+    write: (message) => {
+      // Write to console immediately
+      process.stdout.write(message);
+      // Also append to log file
+      accessLogStream.write(message);
+    },
+  },
+});

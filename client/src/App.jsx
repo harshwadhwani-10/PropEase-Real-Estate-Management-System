@@ -56,7 +56,7 @@ export default function App() {
               <Route path='/owner/dashboard' element={<OwnerDashboard />} />
               <Route path='/owner/listings' element={<OwnerListings />} />
               <Route path='/owner/create-listing' element={<OwnerCreateListing />} />
-              <Route path='/owner/edit-listing/:listingId' element={<UpdateListing />} />
+              <Route path='/owner/edit-listing/:listingId' element={<OwnerEditListing />} />
               <Route path='/owner/inquiries' element={<OwnerInquiries />} />
               <Route path='/owner/profile' element={<OwnerProfile />} />
             </Route>

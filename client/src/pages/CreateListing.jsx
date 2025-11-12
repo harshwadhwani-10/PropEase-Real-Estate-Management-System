@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
+import MapPicker from "../components/map/MapPicker";
 
 export default function CreateListing() {
   const { currentUser } = useSelector((state) => state.user);
@@ -22,6 +23,10 @@ export default function CreateListing() {
     furnished: false,
     documents: [],
     virtualTourUrl: "",
+    location: {
+      type: "Point",
+      coordinates: [72.6369, 23.2156], // [lng, lat] - Default: Gandhinagar
+    },
   });
   const [imageUploadError, setImageUploadError] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -164,9 +169,10 @@ export default function CreateListing() {
       <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-center my-3 sm:my-4 lg:my-7 text-gray-800">
         Create a Listing
       </h1>
-      <form onSubmit={handleSubmit} className="flex flex-col xl:flex-row gap-4 sm:gap-6">
-        {/* LEFT SIDE */}
-        <div className="flex flex-col gap-3 sm:gap-4 flex-1 bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-md">
+      <form onSubmit={handleSubmit} className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column - Form Fields (col-md-8 equivalent) */}
+          <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Property Name *
@@ -210,6 +216,28 @@ export default function CreateListing() {
               value={formData.address}
             />
           </div>
+          
+          {/* Map Picker */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Property Location on Map *
+            </label>
+            <MapPicker
+              initialLat={formData.location.coordinates[1]}
+              initialLng={formData.location.coordinates[0]}
+              onLocationSelect={(location) => {
+                setFormData({
+                  ...formData,
+                  location: {
+                    type: "Point",
+                    coordinates: [location.lng, location.lat], // [lng, lat] format for MongoDB
+                  },
+                });
+              }}
+              height="400px"
+            />
+          </div>
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Property Type *
@@ -341,9 +369,7 @@ export default function CreateListing() {
               </div>
             )}
           </div>
-        </div>
-        {/* RIGHT */}
-        <div className="flex flex-col flex-1 gap-3 sm:gap-4 bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-md">
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Virtual Tour URL (optional)
@@ -351,99 +377,106 @@ export default function CreateListing() {
             <input
               type="url"
               placeholder="https://example.com/virtual-tour"
-              className="border p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
+              className="border p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-[#2A4365]"
               id="virtualTourUrl"
               onChange={handleChange}
               value={formData.virtualTourUrl}
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Property Images *
-            </label>
-            <p className="text-xs text-gray-500 mb-2">
-              The first image will be the cover (max 6 images)
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                onChange={(e) => setFiles(e.target.files)}
-                className="p-3 border border-gray-300 rounded-lg w-full sm:flex-1 focus:outline-none focus:ring-2 focus:ring-slate-500"
-                type="file"
-                id="images"
-                accept="image/*"
-                multiple
-                disabled={uploading}
-              />
-              <button
-                type="button"
-                disabled={uploading || files.length === 0}
-                onClick={handleImageSubmit}
-                className="p-3 bg-green-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-50 transition-opacity font-semibold whitespace-nowrap"
-              >
-                {uploading ? `Uploading ${uploadProgress}%` : "Upload"}
-              </button>
-            </div>
-            {uploading && (
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                <div
-                  className="bg-green-600 h-2.5 rounded-full transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
-              </div>
-            )}
-            {imageUploadError && (
-              <p className="text-red-700 text-sm mt-2 font-semibold">
-                {imageUploadError}
-              </p>
-            )}
           </div>
 
-          {/* Image Previews */}
-          {formData.imageUrls.length > 0 && (
+          {/* Right Column - Images (col-md-4 equivalent) */}
+          <div className="lg:col-span-4 flex flex-col gap-4 sm:gap-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Uploaded Images ({formData.imageUrls.length}/6)
+                Property Images *
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                {formData.imageUrls.map((url, index) => (
-                  <div
-                    key={url}
-                    className="relative border rounded-lg overflow-hidden group"
-                  >
-                    <img
-                      src={url}
-                      alt={`listing image ${index + 1}`}
-                      className="w-full h-32 object-cover"
-                    />
-                    {index === 0 && (
-                      <span className="absolute top-1 left-1 bg-green-600 text-white text-xs px-2 py-1 rounded">
-                        Cover
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(index)}
-                      className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded hover:opacity-90 opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Remove image"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+              <p className="text-xs text-gray-500 mb-2">
+                The first image will be the cover (max 6 images)
+              </p>
+              <div className="flex flex-col gap-3">
+                <input
+                  onChange={(e) => setFiles(e.target.files)}
+                  className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-[#2A4365]"
+                  type="file"
+                  id="images"
+                  accept="image/*"
+                  multiple
+                  disabled={uploading}
+                />
+                <button
+                  type="button"
+                  disabled={uploading || files.length === 0}
+                  onClick={handleImageSubmit}
+                  className="p-3 bg-green-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-50 transition-opacity font-semibold"
+                >
+                  {uploading ? `Uploading ${uploadProgress}%` : "Upload Images"}
+                </button>
               </div>
+              {uploading && (
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                  <div
+                    className="bg-green-600 h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              )}
+              {imageUploadError && (
+                <p className="text-red-700 text-sm mt-2 font-semibold">
+                  {imageUploadError}
+                </p>
+              )}
             </div>
-          )}
 
+            {/* Image Previews */}
+            {formData.imageUrls.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Uploaded Images ({formData.imageUrls.length}/6)
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {formData.imageUrls.map((url, index) => (
+                    <div
+                      key={url}
+                      className="relative border-2 rounded-xl overflow-hidden group aspect-square"
+                    >
+                      <img
+                        src={url}
+                        alt={`listing image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {index === 0 && (
+                        <span className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-lg font-semibold">
+                          Cover
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-lg hover:opacity-90 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        title="Remove image"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Submit Button - Full Width */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
           <button
             type="submit"
             disabled={loading || uploading || formData.imageUrls.length === 0}
-            className="w-full p-2.5 sm:p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-50 transition-opacity font-semibold text-sm sm:text-base lg:text-lg mt-3 sm:mt-4"
+            className="w-full p-4 bg-gradient-to-r from-[#2A4365] to-[#1e2f47] text-white rounded-xl uppercase hover:shadow-lg disabled:opacity-50 transition-all font-semibold text-base lg:text-lg"
           >
             {loading ? "Creating..." : "Create Listing"}
           </button>
           {error && (
-            <p className="text-red-700 text-sm text-center font-semibold">
+            <p className="text-red-700 text-sm text-center font-semibold mt-3">
               {error}
             </p>
           )}

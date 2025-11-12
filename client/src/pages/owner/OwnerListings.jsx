@@ -118,7 +118,7 @@ export default function OwnerListings() {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => navigate(`/update-listing/${listing._id}`)}
+                      onClick={() => navigate(`/owner/edit-listing/${listing._id}`)}
                       className="flex-1 bg-slate-200 text-slate-700 px-4 py-2 rounded hover:opacity-95 transition-opacity"
                     >
                       Edit

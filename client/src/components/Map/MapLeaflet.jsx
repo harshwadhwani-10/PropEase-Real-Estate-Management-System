@@ -1,0 +1,204 @@
+import { useEffect, useRef, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import MapPopup from "./MapPopup";
+import MapSearchBar from "./MapSearchBar";
+import { RecenterButtonInner } from "./RecenterButton";
+
+// Fix for default marker icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+// Create custom marker icons with pin shape and price badge
+const createCustomIcon = (price, type, isHighlighted = false) => {
+  const priceText =
+    price >= 1000000
+      ? `₹${(price / 1000000).toFixed(1)}M`
+      : price >= 1000
+      ? `₹${(price / 1000).toFixed(0)}K`
+      : `₹${price}`;
+
+  const color =
+    type === "rent"
+      ? "#10B981" // Green for rent
+      : type === "commercial"
+      ? "#9333EA" // Purple for commercial
+      : "#3B82F6"; // Blue for sale
+
+  const pinWidth = isHighlighted ? 40 : 36;
+  const pinHeight = isHighlighted ? 55 : 50;
+  const fontSize = 9;
+
+  const svg = `
+    <svg width="${pinWidth}" height="${pinHeight + 5}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${pinWidth} ${pinHeight + 5}">
+      <!-- Pin shadow -->
+      <ellipse cx="${pinWidth / 2}" cy="${pinHeight + 2}" rx="${pinWidth / 4}" ry="2" fill="rgba(0,0,0,0.3)"/>
+      <!-- Pin body (teardrop/pin shape) -->
+      <path d="M ${pinWidth / 2} 0 
+              L ${pinWidth * 0.75} ${pinHeight * 0.6}
+              Q ${pinWidth * 0.8} ${pinHeight * 0.8}, ${pinWidth / 2} ${pinHeight}
+              Q ${pinWidth * 0.2} ${pinHeight * 0.8}, ${pinWidth * 0.25} ${pinHeight * 0.6}
+              Z" 
+            fill="${color}" 
+            stroke="#FFFFFF" 
+            stroke-width="2.5"
+            style="filter: ${isHighlighted ? 'drop-shadow(0 0 6px ' + color + ')' : 'none'};"/>
+      <!-- Price badge circle on top -->
+      <circle cx="${pinWidth / 2}" cy="${pinHeight * 0.2}" r="${pinWidth * 0.22}" fill="${color}" stroke="#FFFFFF" stroke-width="2"/>
+      <text x="${pinWidth / 2}" y="${pinHeight * 0.25}" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="bold" fill="#FFFFFF" text-anchor="middle">${priceText}</text>
+    </svg>
+  `;
+
+  return L.divIcon({
+    html: svg,
+    className: `custom-marker ${isHighlighted ? "marker-highlighted" : ""}`,
+    iconSize: [pinWidth, pinHeight + 5],
+    iconAnchor: [pinWidth / 2, pinHeight + 5],
+    popupAnchor: [0, -(pinHeight + 5)],
+  });
+};
+
+// Component to update map view when center/zoom changes
+function MapUpdater({ center, zoom, animate = true }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center && zoom !== undefined) {
+      if (animate) {
+        map.flyTo(center, zoom, {
+          duration: 1,
+        });
+      } else {
+        map.setView(center, zoom);
+      }
+    }
+  }, [map, center, zoom, animate]);
+  return null;
+}
+
+export default function MapLeaflet({
+  listings = [],
+  center = [23.2156, 72.6369], // Default: Gandhinagar
+  zoom = 12,
+  onMarkerClick,
+  selectedListingId = null,
+  filters = { showRent: true, showSale: true, showCommercial: true },
+  onBoundsChange,
+  onSearchLocationSelect,
+  initialCenter = [23.2156, 72.6369],
+  onRecenter,
+}) {
+  const [map, setMap] = useState(null);
+
+  // Filter listings based on type filters
+  const filteredListings = listings.filter((listing) => {
+    if (listing.type === "rent" && !filters.showRent) return false;
+    if (listing.type === "sale" && !filters.showSale) return false;
+    if (listing.type === "commercial" && !filters.showCommercial) return false;
+    return true;
+  });
+
+  // Filter listings with valid coordinates
+  const validListings = filteredListings.filter(
+    (listing) =>
+      listing.location &&
+      listing.location.coordinates &&
+      listing.location.coordinates.length === 2 &&
+      listing.location.coordinates[0] !== 0 &&
+      listing.location.coordinates[1] !== 0
+  );
+
+  // Handle map load
+  const handleMapReady = (mapInstance) => {
+    setMap(mapInstance);
+
+    // Listen to bounds change
+    if (onBoundsChange) {
+      mapInstance.on("moveend", () => {
+        const bounds = mapInstance.getBounds();
+        onBoundsChange({
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest(),
+        });
+      });
+    }
+  };
+
+  // Don't update marker icons on hover to prevent disappearing
+  // Markers are created with the correct state initially
+
+  return (
+    <div className="relative w-full h-full">
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        style={{ height: "100%", width: "100%" }}
+        scrollWheelZoom={true}
+        whenReady={({ target }) => handleMapReady(target)}
+        zoomControl={true}
+      >
+        <MapUpdater center={center} zoom={zoom} animate={true} />
+        {onSearchLocationSelect && (
+          <MapSearchBar onLocationSelect={onSearchLocationSelect} />
+        )}
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        
+        {/* Recenter Button (inside map context) */}
+        {onRecenter && (
+          <RecenterButtonInner 
+            center={initialCenter || center} 
+            zoom={12}
+            onLocationUpdate={(location) => {
+              // Update center when user location is found
+              if (onSearchLocationSelect) {
+                onSearchLocationSelect({ lat: location[0], lng: location[1] });
+              }
+            }}
+          />
+        )}
+
+        {/* Property Markers */}
+        {validListings.map((listing) => {
+          const position = [
+            listing.location.coordinates[1], // lat
+            listing.location.coordinates[0], // lng
+          ];
+
+          const price = listing.offer ? listing.discountPrice : listing.regularPrice;
+          const isSelected = selectedListingId === listing._id;
+
+          return (
+            <Marker
+              key={listing._id}
+              position={position}
+              icon={createCustomIcon(price, listing.type, isSelected)}
+              eventHandlers={{
+                click: (e) => {
+                  // Open popup on click instead of direct navigation
+                  e.target.openPopup();
+                },
+              }}
+            >
+              <Popup
+                closeButton={true}
+                className="custom-popup"
+                autoPan={true}
+                autoPanPadding={[50, 50]}
+              >
+                <MapPopup listing={listing} onNavigate={onMarkerClick} />
+              </Popup>
+            </Marker>
+          );
+        })}
+      </MapContainer>
+    </div>
+  );
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   signInStart,
@@ -16,13 +16,17 @@ export default function SignIn() {
   const { loading, error, currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const nextUrl = searchParams.get("next");
 
   // Redirect if already logged in
   useEffect(() => {
     if (currentUser) {
-      navigate("/");
+      // Redirect to next URL if provided, otherwise go to home
+      const redirectTo = nextUrl || "/";
+      navigate(redirectTo);
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, nextUrl]);
 
   const handleChange = (e) => {
     setFormData({
@@ -42,7 +46,9 @@ export default function SignIn() {
         return;
       }
       dispatch(signInSuccess(data));
-      navigate("/");
+      // Redirect to next URL if provided, otherwise go to home
+      const redirectTo = nextUrl || "/";
+      navigate(redirectTo);
     } catch (error) {
       dispatch(signInFailure(error.message));
     }

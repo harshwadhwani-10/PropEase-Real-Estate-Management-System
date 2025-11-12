@@ -43,6 +43,7 @@ tmp/
 temp/
 *.tmp
 *.seed
+*.md
 *.pid
 *.pid.lock
 

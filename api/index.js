@@ -48,8 +48,7 @@ app.use(
   })
 );
 
-app.use(logger.console);
-app.use(logger.file);
+app.use(logger);
 
 app.use("/api/user", userRouter);
 app.use("/api/auth", authRouter);
