@@ -122,6 +122,21 @@ export default function CreateListing() {
     });
   };
 
+  /* Handle Set Cover Image */
+  const handleSetCoverImage = (index) => {
+    if (index === 0) return; // Already the cover
+    const newImageUrls = [...formData.imageUrls];
+    const selectedImage = newImageUrls[index];
+    // Remove the selected image from its current position
+    newImageUrls.splice(index, 1);
+    // Add it to the beginning (cover position)
+    newImageUrls.unshift(selectedImage);
+    setFormData({
+      ...formData,
+      imageUrls: newImageUrls,
+    });
+  };
+
   const handleChange = (e) => {
     if (e.target.id === "sale" || e.target.id === "rent") {
       setFormData({
@@ -191,221 +206,200 @@ export default function CreateListing() {
       </h1>
       <form onSubmit={handleSubmit} className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column - Form Fields (col-md-8 equivalent) */}
+          {/* Left Column - Form Fields */}
           <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Property Name *
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., Modern Downtown Apartment"
-              className="border p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
-              id="name"
-              maxLength="62"
-              minLength="10"
-              required
-              onChange={handleChange}
-              value={formData.name}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description *
-            </label>
-            <textarea
-              placeholder="Describe your property in detail..."
-              className="border p-3 rounded-lg w-full min-h-[120px] focus:outline-none focus:ring-2 focus:ring-slate-500"
-              id="description"
-              required
-              onChange={handleChange}
-              value={formData.description}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address *
-            </label>
-            <input
-              type="text"
-              placeholder="Full address including city and state"
-              className="border p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
-              id="address"
-              required
-              onChange={handleChange}
-              value={formData.address}
-            />
-          </div>
-          
-          {/* Map Picker */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Property Location on Map *
-            </label>
-            <MapPicker
-              initialLat={formData.location?.coordinates?.[1] || 23.2156}
-              initialLng={formData.location?.coordinates?.[0] || 72.6369}
-              onLocationSelect={(location) => {
-                setFormData({
-                  ...formData,
-                  location: {
-                    type: "Point",
-                    coordinates: [location.lng, location.lat], // [lng, lat] format for MongoDB
-                  },
-                });
-              }}
-              height="400px"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Property Type *
-            </label>
-            <div className="flex gap-4 flex-wrap">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="type"
-                  id="sale"
-                  className="w-4 h-4"
-                  onChange={handleChange}
-                  checked={formData.type === "sale"}
-                />
-                <span className="text-gray-700">For Sale</span>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Property Name *
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="type"
-                  id="rent"
-                  className="w-4 h-4"
-                  onChange={handleChange}
-                  checked={formData.type === "rent"}
-                />
-                <span className="text-gray-700">For Rent</span>
-              </label>
+              <input
+                type="text"
+                placeholder="e.g., Modern Downtown Apartment"
+                className="border p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
+                id="name"
+                maxLength="62"
+                minLength="10"
+                required
+                onChange={handleChange}
+                value={formData.name}
+              />
             </div>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description *
+              </label>
+              <textarea
+                placeholder="Describe your property in detail..."
+                className="border p-3 rounded-lg w-full min-h-[120px] focus:outline-none focus:ring-2 focus:ring-slate-500"
+                id="description"
+                required
+                onChange={handleChange}
+                value={formData.description}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Address *
+              </label>
+              <input
+                type="text"
+                placeholder="Full address including city and state"
+                className="border p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
+                id="address"
+                required
+                onChange={handleChange}
+                value={formData.address}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Property Type *
+              </label>
+              <div className="flex gap-4 flex-wrap">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="type"
+                    id="sale"
+                    className="w-4 h-4"
+                    onChange={handleChange}
+                    checked={formData.type === "sale"}
+                  />
+                  <span className="text-gray-700">For Sale</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="type"
+                    id="rent"
+                    className="w-4 h-4"
+                    onChange={handleChange}
+                    checked={formData.type === "rent"}
+                  />
+                  <span className="text-gray-700">For Rent</span>
+                </label>
+              </div>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Features
-            </label>
-            <div className="flex gap-4 flex-wrap">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  id="parking"
-                  className="w-4 h-4"
-                  onChange={handleChange}
-                  checked={formData.parking}
-                />
-                <span className="text-gray-700">Parking Spot</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  id="furnished"
-                  className="w-4 h-4"
-                  onChange={handleChange}
-                  checked={formData.furnished}
-                />
-                <span className="text-gray-700">Furnished</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  id="offer"
-                  className="w-4 h-4"
-                  onChange={handleChange}
-                  checked={formData.offer}
-                />
-                <span className="text-gray-700">Special Offer</span>
-              </label>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bedrooms *
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Features
               </label>
-              <input
-                type="number"
-                id="bedrooms"
-                min="1"
-                max="10"
-                required
-                className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
-                onChange={handleChange}
-                value={formData.bedrooms}
-              />
+              <div className="flex gap-4 flex-wrap">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="parking"
+                    className="w-4 h-4"
+                    onChange={handleChange}
+                    checked={formData.parking}
+                  />
+                  <span className="text-gray-700">Parking Spot</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="furnished"
+                    className="w-4 h-4"
+                    onChange={handleChange}
+                    checked={formData.furnished}
+                  />
+                  <span className="text-gray-700">Furnished</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="offer"
+                    className="w-4 h-4"
+                    onChange={handleChange}
+                    checked={formData.offer}
+                  />
+                  <span className="text-gray-700">Special Offer</span>
+                </label>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bathrooms *
-              </label>
-              <input
-                type="number"
-                id="bathrooms"
-                min="1"
-                max="10"
-                required
-                className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
-                onChange={handleChange}
-                value={formData.bathrooms}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Regular Price * {formData.type === "rent" && <span className="text-xs text-gray-500">(₹ / month)</span>}
-              </label>
-              <input
-                type="number"
-                id="regularPrice"
-                min="50"
-                max="10000000"
-                required
-                className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
-                onChange={handleChange}
-                value={formData.regularPrice}
-              />
-            </div>
-            {formData.offer && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Discounted Price * {formData.type === "rent" && <span className="text-xs text-gray-500">(₹ / month)</span>}
+                  Bedrooms *
                 </label>
                 <input
                   type="number"
-                  id="discountPrice"
-                  min="0"
+                  id="bedrooms"
+                  min="1"
+                  max="10"
+                  required
+                  className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
+                  onChange={handleChange}
+                  value={formData.bedrooms}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Bathrooms *
+                </label>
+                <input
+                  type="number"
+                  id="bathrooms"
+                  min="1"
+                  max="10"
+                  required
+                  className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
+                  onChange={handleChange}
+                  value={formData.bathrooms}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Regular Price * {formData.type === "rent" && <span className="text-xs text-gray-500">(₹ / month)</span>}
+                </label>
+                <input
+                  type="number"
+                  id="regularPrice"
+                  min="50"
                   max="10000000"
                   required
                   className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
                   onChange={handleChange}
-                  value={formData.discountPrice}
+                  value={formData.regularPrice}
                 />
               </div>
-            )}
+              {formData.offer && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Discounted Price * {formData.type === "rent" && <span className="text-xs text-gray-500">(₹ / month)</span>}
+                  </label>
+                  <input
+                    type="number"
+                    id="discountPrice"
+                    min="0"
+                    max="10000000"
+                    required
+                    className="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-slate-500"
+                    onChange={handleChange}
+                    value={formData.discountPrice}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Virtual Tour URL (optional)
+              </label>
+              <input
+                type="url"
+                placeholder="https://example.com/virtual-tour"
+                className="border p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-[#2A4365]"
+                id="virtualTourUrl"
+                onChange={handleChange}
+                value={formData.virtualTourUrl}
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Virtual Tour URL (optional)
-            </label>
-            <input
-              type="url"
-              placeholder="https://example.com/virtual-tour"
-              className="border p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-[#2A4365]"
-              id="virtualTourUrl"
-              onChange={handleChange}
-              value={formData.virtualTourUrl}
-            />
-          </div>
-          </div>
-
-          {/* Right Column - Images (col-md-4 equivalent) */}
+          {/* Right Column - Images */}
           <div className="lg:col-span-4 flex flex-col gap-4 sm:gap-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -457,7 +451,7 @@ export default function CreateListing() {
                 <div className="grid grid-cols-2 gap-3">
                   {formData.imageUrls.map((url, index) => (
                     <div
-                      key={url}
+                      key={`${url}-${index}`}
                       className="relative border-2 rounded-xl overflow-hidden group aspect-square"
                     >
                       <img
@@ -466,14 +460,24 @@ export default function CreateListing() {
                         className="w-full h-full object-cover"
                       />
                       {index === 0 && (
-                        <span className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-lg font-semibold">
+                        <span className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-lg font-semibold z-10">
                           Cover
                         </span>
+                      )}
+                      {index !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleSetCoverImage(index)}
+                          className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-lg hover:bg-blue-700 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg font-semibold z-10"
+                          title="Set as cover image"
+                        >
+                          Set Cover
+                        </button>
                       )}
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(index)}
-                        className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-lg hover:opacity-90 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-lg hover:opacity-90 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
                         title="Remove image"
                       >
                         ×
@@ -484,6 +488,27 @@ export default function CreateListing() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Map Picker - Full Width Before Submit Button */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Property Location on Map *
+          </label>
+          <MapPicker
+            initialLat={formData.location?.coordinates?.[1] || 23.2156}
+            initialLng={formData.location?.coordinates?.[0] || 72.6369}
+            onLocationSelect={(location) => {
+              setFormData({
+                ...formData,
+                location: {
+                  type: "Point",
+                  coordinates: [location.lng, location.lat], // [lng, lat] format for MongoDB
+                },
+              });
+            }}
+            height="400px"
+          />
         </div>
 
         {/* Submit Button - Full Width */}

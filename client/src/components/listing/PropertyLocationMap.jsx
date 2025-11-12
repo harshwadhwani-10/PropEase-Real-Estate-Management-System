@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import { Link } from "react-router-dom";
 import L from "leaflet";
 import { MapPin } from "lucide-react";
 import api from "../../utils/api";
+import MapListPopup from "../map/MapListPopup";
 
 // Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -84,12 +85,60 @@ function MapInitializer({ center, zoom }) {
   return null;
 }
 
+// Component to track zoom level
+function ZoomTracker({ onZoomChange }) {
+  const map = useMap();
+  useMapEvents({
+    zoomend: () => {
+      if (onZoomChange) {
+        onZoomChange(map.getZoom());
+      }
+    },
+  });
+  return null;
+}
+
+// Helper function to find nearby markers within pixel distance
+function findNearbyMarkers(clickedListing, allListings, map, pixelRadius = 50) {
+  if (!map || !clickedListing) return [clickedListing];
+
+  const clickedLat = clickedListing.location.coordinates[1];
+  const clickedLng = clickedListing.location.coordinates[0];
+  const clickedPoint = map.latLngToContainerPoint([clickedLat, clickedLng]);
+
+  const nearbyListings = [clickedListing];
+
+  allListings.forEach((listing) => {
+    if (listing._id === clickedListing._id) return;
+
+    const listingLat = listing.location.coordinates[1];
+    const listingLng = listing.location.coordinates[0];
+    const listingPoint = map.latLngToContainerPoint([listingLat, listingLng]);
+
+    // Calculate pixel distance
+    const distance = Math.sqrt(
+      Math.pow(clickedPoint.x - listingPoint.x, 2) +
+      Math.pow(clickedPoint.y - listingPoint.y, 2)
+    );
+
+    if (distance <= pixelRadius) {
+      nearbyListings.push(listing);
+    }
+  });
+
+  return nearbyListings;
+}
+
 export default function PropertyLocationMap({ listing }) {
   const [nearbyListings, setNearbyListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
   const [mapCenter, setMapCenter] = useState(null);
   const [mapZoom, setMapZoom] = useState(15);
+  const [currentZoom, setCurrentZoom] = useState(15);
+  const [clickedMarkerData, setClickedMarkerData] = useState(null);
+  const [mapInstance, setMapInstance] = useState(null);
+  const listPopupRef = useRef(null);
   const hasFetchedRef = useRef(false);
   const hasInitializedMapRef = useRef(false);
 
@@ -227,7 +276,21 @@ export default function PropertyLocationMap({ listing }) {
     hasFetchedRef.current = false;
     hasInitializedMapRef.current = false;
     setMapCenter(null); // Reset map center so it can be reinitialized
+    setClickedMarkerData(null); // Reset clicked marker data
   }, [listing?._id]);
+
+  // Open list popup when marker data is set
+  useEffect(() => {
+    if (clickedMarkerData && clickedMarkerData.listings.length > 1 && listPopupRef.current) {
+      // Small delay to ensure marker is rendered
+      const timer = setTimeout(() => {
+        if (listPopupRef.current) {
+          listPopupRef.current.openPopup();
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [clickedMarkerData]);
 
   if (!propertyCoords) {
     return (
@@ -263,8 +326,10 @@ export default function PropertyLocationMap({ listing }) {
             touchZoom={true}
             doubleClickZoom={true}
             key={listing?._id || 'map'} // Only remount when listing changes
+            whenReady={({ target }) => setMapInstance(target)}
           >
             <MapInitializer center={mapCenter} zoom={mapZoom} />
+            <ZoomTracker onZoomChange={setCurrentZoom} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -304,6 +369,53 @@ export default function PropertyLocationMap({ listing }) {
                   key={nearbyListing._id}
                   position={nearbyCoords}
                   icon={createNearbyPropertyIcon(price, nearbyListing.type)}
+                  eventHandlers={{
+                    click: (e) => {
+                      if (!mapInstance) return;
+                      
+                      const zoom = mapInstance.getZoom();
+                      
+                      // If zoomed in enough (>= 13), show individual popup
+                      if (zoom >= 13) {
+                        e.target.openPopup();
+                        setClickedMarkerData(null);
+                        return;
+                      }
+
+                      // If zoomed out, check for nearby markers
+                      // Include current listing in the search (convert to same format)
+                      const currentListingForSearch = {
+                        ...listing,
+                        location: listing.location,
+                      };
+                      const allNearbyListings = [currentListingForSearch, ...nearbyListings];
+                      const nearbyMarkers = findNearbyMarkers(nearbyListing, allNearbyListings, mapInstance, 60);
+                      
+                      // If multiple markers nearby, show list popup
+                      if (nearbyMarkers.length > 1) {
+                        const listPosition = [
+                          nearbyListing.location.coordinates[1],
+                          nearbyListing.location.coordinates[0],
+                        ];
+                        
+                        setClickedMarkerData({
+                          listings: nearbyMarkers,
+                          position: listPosition,
+                        });
+                        
+                        // Close any open individual popups
+                        mapInstance.eachLayer((layer) => {
+                          if (layer instanceof L.Marker && layer.isPopupOpen()) {
+                            layer.closePopup();
+                          }
+                        });
+                      } else {
+                        // Single marker, show individual popup
+                        e.target.openPopup();
+                        setClickedMarkerData(null);
+                      }
+                    },
+                  }}
                 >
                   <Popup>
                     <div className="p-2 max-w-xs">
@@ -333,6 +445,34 @@ export default function PropertyLocationMap({ listing }) {
                 </Marker>
               );
             })}
+
+          {/* List Popup for Clustered Markers */}
+          {clickedMarkerData && clickedMarkerData.listings.length > 1 && (
+            <Marker 
+              position={clickedMarkerData.position} 
+              icon={L.divIcon({ 
+                className: 'hidden',
+                iconSize: [0, 0],
+                iconAnchor: [0, 0]
+              })}
+              ref={listPopupRef}
+            >
+              <Popup
+                closeButton={true}
+                className="custom-popup"
+                autoPan={true}
+                autoPanPadding={[50, 50]}
+                onClose={() => setClickedMarkerData(null)}
+              >
+                <MapListPopup 
+                  listings={clickedMarkerData.listings} 
+                  onNavigate={(listingId) => {
+                    window.location.href = `/listing/${listingId}`;
+                  }} 
+                />
+              </Popup>
+            </Marker>
+          )}
           </MapContainer>
         )}
       </div>

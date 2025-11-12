@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import MapPopup from "./MapPopup";
+import MapListPopup from "./MapListPopup";
 import MapSearchBar from "./MapSearchBar";
 import { RecenterButtonInner } from "./RecenterButton";
 
@@ -79,6 +80,50 @@ function MapUpdater({ center, zoom, animate = true }) {
   return null;
 }
 
+// Component to track zoom level
+function ZoomTracker({ onZoomChange }) {
+  const map = useMap();
+  useMapEvents({
+    zoomend: () => {
+      if (onZoomChange) {
+        onZoomChange(map.getZoom());
+      }
+    },
+  });
+  return null;
+}
+
+// Helper function to find nearby markers within pixel distance
+function findNearbyMarkers(clickedListing, allListings, map, pixelRadius = 50) {
+  if (!map || !clickedListing) return [clickedListing];
+
+  const clickedLat = clickedListing.location.coordinates[1];
+  const clickedLng = clickedListing.location.coordinates[0];
+  const clickedPoint = map.latLngToContainerPoint([clickedLat, clickedLng]);
+
+  const nearbyListings = [clickedListing];
+
+  allListings.forEach((listing) => {
+    if (listing._id === clickedListing._id) return;
+
+    const listingLat = listing.location.coordinates[1];
+    const listingLng = listing.location.coordinates[0];
+    const listingPoint = map.latLngToContainerPoint([listingLat, listingLng]);
+
+    // Calculate pixel distance
+    const distance = Math.sqrt(
+      Math.pow(clickedPoint.x - listingPoint.x, 2) +
+      Math.pow(clickedPoint.y - listingPoint.y, 2)
+    );
+
+    if (distance <= pixelRadius) {
+      nearbyListings.push(listing);
+    }
+  });
+
+  return nearbyListings;
+}
+
 export default function MapLeaflet({
   listings = [],
   center = [23.2156, 72.6369], // Default: Gandhinagar
@@ -92,6 +137,10 @@ export default function MapLeaflet({
   onRecenter,
 }) {
   const [map, setMap] = useState(null);
+  const [currentZoom, setCurrentZoom] = useState(zoom);
+  const [clickedMarkerData, setClickedMarkerData] = useState(null);
+  const markerRefs = useRef({});
+  const listPopupRef = useRef(null);
 
   // Filter listings based on type filters
   const filteredListings = listings.filter((listing) => {
@@ -114,6 +163,7 @@ export default function MapLeaflet({
   // Handle map load
   const handleMapReady = (mapInstance) => {
     setMap(mapInstance);
+    setCurrentZoom(mapInstance.getZoom());
 
     // Listen to bounds change
     if (onBoundsChange) {
@@ -129,6 +179,62 @@ export default function MapLeaflet({
     }
   };
 
+  // Handle marker click with clustering detection
+  const handleMarkerClick = (e, clickedListing) => {
+    if (!map) return;
+
+    const zoom = map.getZoom();
+    
+    // If zoomed in enough (>= 13), show individual popup
+    if (zoom >= 13) {
+      e.target.openPopup();
+      setClickedMarkerData(null);
+      return;
+    }
+
+    // If zoomed out, check for nearby markers
+    const nearbyListings = findNearbyMarkers(clickedListing, validListings, map, 60);
+    
+    // If multiple markers nearby, show list popup
+    if (nearbyListings.length > 1) {
+      const listPosition = [
+        clickedListing.location.coordinates[1],
+        clickedListing.location.coordinates[0],
+      ];
+      
+      setClickedMarkerData({
+        listings: nearbyListings,
+        position: listPosition,
+      });
+      
+      // Close any open individual popups
+      map.eachLayer((layer) => {
+        if (layer instanceof L.Marker && layer.isPopupOpen()) {
+          layer.closePopup();
+        }
+      });
+      
+      // The popup will be opened via useEffect when the marker is rendered
+    } else {
+      // Single marker, show individual popup
+      e.target.openPopup();
+      setClickedMarkerData(null);
+    }
+  };
+
+  // Open list popup when marker data is set
+  useEffect(() => {
+    if (clickedMarkerData && clickedMarkerData.listings.length > 1 && listPopupRef.current) {
+      // Small delay to ensure marker is rendered
+      const timer = setTimeout(() => {
+        if (listPopupRef.current) {
+          listPopupRef.current.openPopup();
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [clickedMarkerData]);
+
   // Don't update marker icons on hover to prevent disappearing
   // Markers are created with the correct state initially
 
@@ -143,6 +249,7 @@ export default function MapLeaflet({
         zoomControl={true}
       >
         <MapUpdater center={center} zoom={zoom} animate={true} />
+        <ZoomTracker onZoomChange={setCurrentZoom} />
         {onSearchLocationSelect && (
           <MapSearchBar onLocationSelect={onSearchLocationSelect} />
         )}
@@ -180,10 +287,12 @@ export default function MapLeaflet({
               key={listing._id}
               position={position}
               icon={createCustomIcon(price, listing.type, isSelected)}
+              ref={(ref) => {
+                if (ref) markerRefs.current[listing._id] = ref;
+              }}
               eventHandlers={{
                 click: (e) => {
-                  // Open popup on click instead of direct navigation
-                  e.target.openPopup();
+                  handleMarkerClick(e, listing);
                 },
               }}
             >
@@ -198,6 +307,29 @@ export default function MapLeaflet({
             </Marker>
           );
         })}
+
+        {/* List Popup for Clustered Markers */}
+        {clickedMarkerData && clickedMarkerData.listings.length > 1 && (
+          <Marker 
+            position={clickedMarkerData.position} 
+            icon={L.divIcon({ 
+              className: 'hidden',
+              iconSize: [0, 0],
+              iconAnchor: [0, 0]
+            })}
+            ref={listPopupRef}
+          >
+            <Popup
+              closeButton={true}
+              className="custom-popup"
+              autoPan={true}
+              autoPanPadding={[50, 50]}
+              onClose={() => setClickedMarkerData(null)}
+            >
+              <MapListPopup listings={clickedMarkerData.listings} onNavigate={onMarkerClick} />
+            </Popup>
+          </Marker>
+        )}
       </MapContainer>
     </div>
   );

@@ -10,6 +10,9 @@ export default function Layout({ children }) {
     location.pathname.startsWith("/owner/") || 
     location.pathname.startsWith("/admin/");
   
+  // Hide footer on map page
+  const hideFooter = location.pathname === "/map";
+  
   if (hideHeaderFooter) {
     return <>{children}</>;
   }
@@ -20,7 +23,7 @@ export default function Layout({ children }) {
       <main className="flex-grow">
         {children}
       </main>
-      <Footer />
+      {!hideFooter && <Footer />}
     </div>
   );
 }

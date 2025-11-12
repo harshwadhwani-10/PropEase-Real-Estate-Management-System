@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
@@ -95,14 +95,66 @@ function SearchControl({ onLocationSelect }) {
   return null;
 }
 
-// Component to update map view
-function MapViewUpdater({ center, zoom }) {
+// Component to update map view (only on initial load or search, not on marker placement)
+function MapViewUpdater({ center, zoom, shouldUpdate }) {
   const map = useMap();
+  const lastUpdateRef = useRef({ center: null, zoom: null });
+  
   useEffect(() => {
-    if (center && zoom) {
-      map.setView(center, zoom, { animate: true, duration: 0.5 });
+    // Only update view if shouldUpdate is true AND center/zoom actually changed
+    if (center && zoom && shouldUpdate) {
+      const centerChanged = 
+        !lastUpdateRef.current.center || 
+        lastUpdateRef.current.center[0] !== center[0] || 
+        lastUpdateRef.current.center[1] !== center[1];
+      const zoomChanged = lastUpdateRef.current.zoom !== zoom;
+      
+      // Only update if center or zoom actually changed (not just position state update)
+      if (centerChanged || zoomChanged) {
+        map.setView(center, zoom, { animate: true, duration: 0.5 });
+        lastUpdateRef.current = { center: [...center], zoom };
+      }
     }
-  }, [map, center, zoom]);
+  }, [map, center, zoom, shouldUpdate]);
+  return null;
+}
+
+// Component to handle map clicks and track zoom
+function MapClickHandler({ onMapClick, onZoomChange }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (!map) return;
+    
+    // Track zoom changes
+    const handleZoomEnd = () => {
+      if (onZoomChange) {
+        onZoomChange(map.getZoom());
+      }
+    };
+    
+    // Handle map clicks
+    const handleClick = (e) => {
+      if (onMapClick) {
+        const { lat, lng } = e.latlng;
+        onMapClick({ lat, lng });
+      }
+    };
+    
+    map.on("click", handleClick);
+    map.on("zoomend", handleZoomEnd);
+    
+    // Get initial zoom
+    if (onZoomChange) {
+      onZoomChange(map.getZoom());
+    }
+    
+    return () => {
+      map.off("click", handleClick);
+      map.off("zoomend", handleZoomEnd);
+    };
+  }, [map, onMapClick, onZoomChange]);
+  
   return null;
 }
 
@@ -120,14 +172,19 @@ export default function MapPicker({
   const [isLocationSet, setIsLocationSet] = useState(false);
   const [latInput, setLatInput] = useState(initialLat.toString());
   const [lngInput, setLngInput] = useState(initialLng.toString());
+  const [shouldUpdateView, setShouldUpdateView] = useState(true); // Only update view on initial load
+  const [mapZoom, setMapZoom] = useState(13); // Track current zoom level
+  const [viewCenter, setViewCenter] = useState([initialLat, initialLng]); // Separate center for view updates
 
-  // Update position when initial values change
+  // Update position when initial values change (from props, not from user clicks)
   useEffect(() => {
     if (initialLat && initialLng) {
       setPosition([initialLat, initialLng]);
       setCoordinates({ lat: initialLat, lng: initialLng });
       setLatInput(initialLat.toString());
       setLngInput(initialLng.toString());
+      setViewCenter([initialLat, initialLng]); // Update view center for initial load
+      setShouldUpdateView(true); // Allow view update when initial values change
     }
   }, [initialLat, initialLng]);
 
@@ -147,6 +204,9 @@ export default function MapPicker({
   useEffect(() => {
     const handleLocationSelect = (e) => {
       const { lat, lng } = e.detail;
+      // When searching, allow view update to zoom to the searched location
+      setViewCenter([lat, lng]); // Update view center for search
+      setShouldUpdateView(true);
       // Automatically update coordinates when place is searched (e.g., "National Park")
       updateCoordinates(lat, lng);
     };
@@ -158,11 +218,12 @@ export default function MapPicker({
   }, [updateCoordinates]);
 
   // Handle map click - click anywhere on map to place marker
-  const handleMapClick = (e) => {
-    const { lat, lng } = e.latlng;
+  const handleMapClick = useCallback(({ lat, lng }) => {
     // Place marker and save coordinates when clicking on map
+    // Don't update the map view (zoom) - keep current zoom level
+    setShouldUpdateView(false);
     updateCoordinates(lat, lng);
-  };
+  }, [updateCoordinates]);
 
   // Handle coordinate input change
   const handleLatInputChange = (e) => {
@@ -170,6 +231,8 @@ export default function MapPicker({
     setLatInput(value);
     const lat = parseFloat(value);
     if (!isNaN(lat) && lat >= -90 && lat <= 90) {
+      // Don't update view when manually entering coordinates - keep current zoom
+      setShouldUpdateView(false);
       updateCoordinates(lat, coordinates.lng);
     }
   };
@@ -179,6 +242,8 @@ export default function MapPicker({
     setLngInput(value);
     const lng = parseFloat(value);
     if (!isNaN(lng) && lng >= -180 && lng <= 180) {
+      // Don't update view when manually entering coordinates - keep current zoom
+      setShouldUpdateView(false);
       updateCoordinates(coordinates.lat, lng);
     }
   };
@@ -196,7 +261,7 @@ export default function MapPicker({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100"
+        className=""
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -276,9 +341,9 @@ export default function MapPicker({
             zoom={13}
             style={{ height: "100%", width: "100%" }}
             scrollWheelZoom={true}
-            onClick={handleMapClick}
           >
-            <MapViewUpdater center={position} zoom={13} />
+            <MapViewUpdater center={viewCenter} zoom={mapZoom} shouldUpdate={shouldUpdateView} />
+            <MapClickHandler onMapClick={handleMapClick} onZoomChange={setMapZoom} />
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -288,10 +353,6 @@ export default function MapPicker({
               position={position}
               icon={createPickerIcon(isLocationSet)}
               draggable={false}
-              eventHandlers={{
-                // Marker is not draggable - user clicks on map to place it
-                // Clicking marker itself doesn't do anything (map click handles placement)
-              }}
             />
           </MapContainer>
         </div>
