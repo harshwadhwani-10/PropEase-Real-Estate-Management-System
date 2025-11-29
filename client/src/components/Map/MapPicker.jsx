@@ -10,7 +10,8 @@ import "leaflet-geosearch/dist/geosearch.css";
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
@@ -22,20 +23,32 @@ const createPickerIcon = (isSelected = false) => {
 
   return L.divIcon({
     html: `
-      <svg width="${pinWidth}" height="${pinHeight + 5}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${pinWidth} ${pinHeight + 5}">
+      <svg width="${pinWidth}" height="${
+      pinHeight + 5
+    }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${pinWidth} ${
+      pinHeight + 5
+    }">
         <!-- Pin shadow -->
-        <ellipse cx="${pinWidth / 2}" cy="${pinHeight + 2}" rx="${pinWidth / 4}" ry="2" fill="rgba(0,0,0,0.3)"/>
+        <ellipse cx="${pinWidth / 2}" cy="${pinHeight + 2}" rx="${
+      pinWidth / 4
+    }" ry="2" fill="rgba(0,0,0,0.3)"/>
         <!-- Pin body (teardrop/pin shape) -->
-        <path d="M ${pinWidth / 2} 0 
+        <path d="M ${pinWidth / 2} 0
                 L ${pinWidth * 0.75} ${pinHeight * 0.6}
-                Q ${pinWidth * 0.8} ${pinHeight * 0.8}, ${pinWidth / 2} ${pinHeight}
-                Q ${pinWidth * 0.2} ${pinHeight * 0.8}, ${pinWidth * 0.25} ${pinHeight * 0.6}
-                Z" 
-              fill="${color}" 
-              stroke="#FFFFFF" 
+                Q ${pinWidth * 0.8} ${pinHeight * 0.8}, ${
+      pinWidth / 2
+    } ${pinHeight}
+                Q ${pinWidth * 0.2} ${pinHeight * 0.8}, ${pinWidth * 0.25} ${
+      pinHeight * 0.6
+    }
+                Z"
+              fill="${color}"
+              stroke="#FFFFFF"
               stroke-width="2.5"/>
         <!-- Pin point circle -->
-        <circle cx="${pinWidth / 2}" cy="${pinHeight * 0.2}" r="6" fill="#FFFFFF" stroke="${color}" stroke-width="2"/>
+        <circle cx="${pinWidth / 2}" cy="${
+      pinHeight * 0.2
+    }" r="6" fill="#FFFFFF" stroke="${color}" stroke-width="2"/>
       </svg>
     `,
     className: "map-picker-marker",
@@ -99,16 +112,16 @@ function SearchControl({ onLocationSelect }) {
 function MapViewUpdater({ center, zoom, shouldUpdate }) {
   const map = useMap();
   const lastUpdateRef = useRef({ center: null, zoom: null });
-  
+
   useEffect(() => {
     // Only update view if shouldUpdate is true AND center/zoom actually changed
     if (center && zoom && shouldUpdate) {
-      const centerChanged = 
-        !lastUpdateRef.current.center || 
-        lastUpdateRef.current.center[0] !== center[0] || 
+      const centerChanged =
+        !lastUpdateRef.current.center ||
+        lastUpdateRef.current.center[0] !== center[0] ||
         lastUpdateRef.current.center[1] !== center[1];
       const zoomChanged = lastUpdateRef.current.zoom !== zoom;
-      
+
       // Only update if center or zoom actually changed (not just position state update)
       if (centerChanged || zoomChanged) {
         map.setView(center, zoom, { animate: true, duration: 0.5 });
@@ -122,17 +135,17 @@ function MapViewUpdater({ center, zoom, shouldUpdate }) {
 // Component to handle map clicks and track zoom
 function MapClickHandler({ onMapClick, onZoomChange }) {
   const map = useMap();
-  
+
   useEffect(() => {
     if (!map) return;
-    
+
     // Track zoom changes
     const handleZoomEnd = () => {
       if (onZoomChange) {
         onZoomChange(map.getZoom());
       }
     };
-    
+
     // Handle map clicks
     const handleClick = (e) => {
       if (onMapClick) {
@@ -140,21 +153,21 @@ function MapClickHandler({ onMapClick, onZoomChange }) {
         onMapClick({ lat, lng });
       }
     };
-    
+
     map.on("click", handleClick);
     map.on("zoomend", handleZoomEnd);
-    
+
     // Get initial zoom
     if (onZoomChange) {
       onZoomChange(map.getZoom());
     }
-    
+
     return () => {
       map.off("click", handleClick);
       map.off("zoomend", handleZoomEnd);
     };
   }, [map, onMapClick, onZoomChange]);
-  
+
   return null;
 }
 
@@ -165,9 +178,9 @@ export default function MapPicker({
   height = "500px",
 }) {
   const [position, setPosition] = useState([initialLat, initialLng]);
-  const [coordinates, setCoordinates] = useState({ 
-    lat: initialLat, 
-    lng: initialLng 
+  const [coordinates, setCoordinates] = useState({
+    lat: initialLat,
+    lng: initialLng,
   });
   const [isLocationSet, setIsLocationSet] = useState(false);
   const [latInput, setLatInput] = useState(initialLat.toString());
@@ -189,16 +202,19 @@ export default function MapPicker({
   }, [initialLat, initialLng]);
 
   // Update coordinates function - saves coordinates when marker is placed
-  const updateCoordinates = useCallback((lat, lng) => {
-    setPosition([lat, lng]);
-    setCoordinates({ lat, lng });
-    setLatInput(lat.toFixed(6));
-    setLngInput(lng.toFixed(6));
-    setIsLocationSet(true);
-    if (onLocationSelect) {
-      onLocationSelect({ lat, lng });
-    }
-  }, [onLocationSelect]);
+  const updateCoordinates = useCallback(
+    (lat, lng) => {
+      setPosition([lat, lng]);
+      setCoordinates({ lat, lng });
+      setLatInput(lat.toFixed(6));
+      setLngInput(lng.toFixed(6));
+      setIsLocationSet(true);
+      if (onLocationSelect) {
+        onLocationSelect({ lat, lng });
+      }
+    },
+    [onLocationSelect]
+  );
 
   // Listen for search results - automatically save when place is searched
   useEffect(() => {
@@ -213,17 +229,23 @@ export default function MapPicker({
 
     window.addEventListener("mapPickerLocationSelected", handleLocationSelect);
     return () => {
-      window.removeEventListener("mapPickerLocationSelected", handleLocationSelect);
+      window.removeEventListener(
+        "mapPickerLocationSelected",
+        handleLocationSelect
+      );
     };
   }, [updateCoordinates]);
 
   // Handle map click - click anywhere on map to place marker
-  const handleMapClick = useCallback(({ lat, lng }) => {
-    // Place marker and save coordinates when clicking on map
-    // Don't update the map view (zoom) - keep current zoom level
-    setShouldUpdateView(false);
-    updateCoordinates(lat, lng);
-  }, [updateCoordinates]);
+  const handleMapClick = useCallback(
+    ({ lat, lng }) => {
+      // Place marker and save coordinates when clicking on map
+      // Don't update the map view (zoom) - keep current zoom level
+      setShouldUpdateView(false);
+      updateCoordinates(lat, lng);
+    },
+    [updateCoordinates]
+  );
 
   // Handle coordinate input change
   const handleLatInputChange = (e) => {
@@ -269,7 +291,9 @@ export default function MapPicker({
               <MapPin className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-lg">Select Property Location</h3>
+              <h3 className="font-bold text-gray-900 text-lg">
+                Select Property Location
+              </h3>
               <p className="text-sm text-gray-600">
                 Click on the map or enter coordinates to set the location
               </p>
@@ -293,9 +317,17 @@ export default function MapPicker({
             <div className="text-sm text-blue-800">
               <p className="font-semibold mb-1">How to set location:</p>
               <ul className="list-disc list-inside space-y-1 text-blue-700">
-                <li>Use the search bar on the map to find addresses, societies, or areas - coordinates will be saved automatically</li>
-                <li>Click anywhere on the map to place a PIN marker and save coordinates</li>
-                <li>Or manually enter latitude and longitude coordinates below</li>
+                <li>
+                  Use the search bar on the map to find addresses, societies, or
+                  areas - coordinates will be saved automatically
+                </li>
+                <li>
+                  Click anywhere on the map to place a PIN marker and save
+                  coordinates
+                </li>
+                <li>
+                  Or manually enter latitude and longitude coordinates below
+                </li>
               </ul>
             </div>
           </div>
@@ -335,15 +367,25 @@ export default function MapPicker({
           </div>
         </div>
 
-        <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg" style={{ height }}>
+        <div
+          className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg"
+          style={{ height }}
+        >
           <MapContainer
             center={position}
             zoom={13}
             style={{ height: "100%", width: "100%" }}
             scrollWheelZoom={true}
           >
-            <MapViewUpdater center={viewCenter} zoom={mapZoom} shouldUpdate={shouldUpdateView} />
-            <MapClickHandler onMapClick={handleMapClick} onZoomChange={setMapZoom} />
+            <MapViewUpdater
+              center={viewCenter}
+              zoom={mapZoom}
+              shouldUpdate={shouldUpdateView}
+            />
+            <MapClickHandler
+              onMapClick={handleMapClick}
+              onZoomChange={setMapZoom}
+            />
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -356,7 +398,6 @@ export default function MapPicker({
             />
           </MapContainer>
         </div>
-
       </motion.div>
     </div>
   );

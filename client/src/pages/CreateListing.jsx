@@ -77,9 +77,11 @@ export default function CreateListing() {
         if (err.response?.data?.message) {
           errorMessage = err.response.data.message;
         } else if (err.response?.status === 400) {
-          errorMessage = "Invalid file format. Please upload images only (JPG, PNG, WEBP).";
+          errorMessage =
+            "Invalid file format. Please upload images only (JPG, PNG, WEBP).";
         } else if (err.response?.status === 413) {
-          errorMessage = "File size too large. Maximum file size is 5MB per image.";
+          errorMessage =
+            "File size too large. Maximum file size is 5MB per image.";
         } else if (err.message) {
           errorMessage = err.message;
         }
@@ -168,7 +170,9 @@ export default function CreateListing() {
       // Check if listing is pending approval
       if (data.status === "pending") {
         // Show success message and redirect to owner listings
-        alert("Listing created successfully! It is pending admin approval. You will be redirected to your listings.");
+        alert(
+          "Listing created successfully! It is pending admin approval. You will be redirected to your listings."
+        );
         navigate("/owner/listings");
       } else {
         // If already approved (shouldn't happen normally), redirect to listing
@@ -184,7 +188,10 @@ export default function CreateListing() {
       <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-center my-3 sm:my-4 lg:my-7 text-gray-800">
         Create a Listing
       </h1>
-      <form onSubmit={handleSubmit} className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-xl">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-xl"
+      >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column - Form Fields */}
           <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-5">
@@ -231,7 +238,7 @@ export default function CreateListing() {
                 value={formData.address}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Property Type *
@@ -332,7 +339,10 @@ export default function CreateListing() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Regular Price * {formData.type === "rent" && <span className="text-xs text-gray-500">(₹ / month)</span>}
+                  Regular Price *{" "}
+                  {formData.type === "rent" && (
+                    <span className="text-xs text-gray-500">(₹ / month)</span>
+                  )}
                 </label>
                 <input
                   type="number"
@@ -348,7 +358,10 @@ export default function CreateListing() {
               {formData.offer && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Discounted Price * {formData.type === "rent" && <span className="text-xs text-gray-500">(₹ / month)</span>}
+                    Discounted Price *{" "}
+                    {formData.type === "rent" && (
+                      <span className="text-xs text-gray-500">(₹ / month)</span>
+                    )}
                   </label>
                   <input
                     type="number"
