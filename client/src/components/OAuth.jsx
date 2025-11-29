@@ -29,7 +29,7 @@ export default function OAuth() {
       // Check if user exists
       try {
         const checkRes = await api.get(`/api/user/check-email?email=${encodeURIComponent(result.user.email)}`);
-        
+
         if (checkRes.data.exists) {
           // User exists, sign in directly
           const signInRes = await api.post("/api/auth/google", {

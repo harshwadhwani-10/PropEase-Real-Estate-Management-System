@@ -7,6 +7,7 @@ PropEase is a comprehensive property management system designed to streamline re
 ## ✨ Features
 
 ### Core Functionality
+
 - **Property Management**: Complete property lifecycle management from listing to maintenance
 - **Tenant Management**: Tenant onboarding, lease management, and communication
 - **Financial Management**: Rent collection, expense tracking, and financial reporting
@@ -15,6 +16,7 @@ PropEase is a comprehensive property management system designed to streamline re
 - **Reporting & Analytics**: Comprehensive reports and insights for property performance
 
 ### User Experience
+
 - **Responsive Design**: Mobile-first approach for accessibility across all devices
 - **Intuitive Interface**: User-friendly dashboard and navigation
 - **Real-time Updates**: Live notifications and status updates
@@ -23,6 +25,7 @@ PropEase is a comprehensive property management system designed to streamline re
 ## 🛠️ Technology Stack
 
 ### Frontend
+
 - **Angular JS**: React framework for production-ready applications
 - **TypeScript**: Type-safe development for better code quality
 - **TailwindCSS**: Utility-first CSS framework for rapid UI development
@@ -31,12 +34,14 @@ PropEase is a comprehensive property management system designed to streamline re
 - **React Hook Form**: Efficient form handling and validation
 
 ### Backend & Services
+
 - **Authentication**: Secure user authentication and authorization
 - **Database**: Robust data management and storage
 - **API Integration**: RESTful APIs for seamless data exchange
 - **Cloud Services**: Scalable cloud infrastructure
 
 ### Development Tools
+
 - **Version Control**: Git for source code management
 - **Package Manager**: PNPM/Yarn for dependency management
 - **Code Quality**: ESLint and Prettier for code formatting
@@ -45,6 +50,7 @@ PropEase is a comprehensive property management system designed to streamline re
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js (v18 or higher)
 - PNPM or Yarn package manager
 - Git
@@ -52,12 +58,14 @@ PropEase is a comprehensive property management system designed to streamline re
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-username/propease.git
    cd propease
    ```
 
 2. **Install dependencies**
+
    ```bash
    pnpm install
    # or
@@ -65,11 +73,13 @@ PropEase is a comprehensive property management system designed to streamline re
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Configure the following variables in your `.env` file:
+
    ```env
    NEXT_PUBLIC_APP_NAME=PropEase
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_key
@@ -81,6 +91,7 @@ PropEase is a comprehensive property management system designed to streamline re
    ```
 
 4. **Run the development server**
+
    ```bash
    pnpm run dev
    # or
@@ -126,6 +137,7 @@ The project has been developed through multiple sprints:
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new):
 
 1. Push your code to GitHub
@@ -134,6 +146,7 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 4. Deploy with one click
 
 ### Other Platforms
+
 - **Netlify**: Full-stack deployment with serverless functions
 - **AWS**: Scalable cloud deployment
 - **Docker**: Containerized deployment
@@ -149,6 +162,7 @@ We welcome contributions to PropEase! Please follow these steps:
 5. Open a Pull Request
 
 ### Development Guidelines
+
 - Follow TypeScript best practices
 - Write comprehensive tests for new features
 - Ensure responsive design for all components
@@ -158,18 +172,18 @@ We welcome contributions to PropEase! Please follow these steps:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-
 ## 📞 Support & Contact
 
 For support, questions, or business inquiries:
 
-- **Email**: harshwadhwani268@gmail.com
+- **Email**: <harshwadhwani268@gmail.com>
 - **Website**: [PropEase Official Website](https://propease.com)
 - **Documentation**: [PropEase Docs](https://docs.propease.com)
 
 ## 🙏 Acknowledgments
 
 Special thanks to:
+
 - The development team for their dedication
 - Beta testers for valuable feedback
 - Open source community for amazing tools and libraries
@@ -178,6 +192,7 @@ Special thanks to:
 ## 📈 Roadmap
 
 ### Upcoming Features
+
 - [ ] Advanced analytics dashboard
 - [ ] AI-powered property valuation
 - [ ] Integration with popular real estate platforms
@@ -186,6 +201,7 @@ Special thanks to:
 - [ ] Smart home integration
 
 ### Version History
+
 - **v1.0.0**: Initial release with core property management features
 - **v1.1.0**: Enhanced user interface and mobile responsiveness
 - **v1.2.0**: Advanced reporting and analytics
@@ -196,3 +212,7 @@ Special thanks to:
 **Made with ❤️ by the PropEase Team**
 
 *Transforming property management, one property at a time.*
+
+## **Deployment**
+
+- **Docker**: See `DEPLOYMENT.md` for step-by-step instructions to build and run the project with Docker and Docker Compose (includes `api` and `client` services and example `.env` values).

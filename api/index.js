@@ -43,12 +43,33 @@ const limiter = rateLimit({
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "http://propease-frontend-alb-745773215.ap-south-1.elb.amazonaws.com",
+    ],
     credentials: true,
   })
 );
 
 app.use(logger);
+
+// Health endpoints for monitoring / load balancers
+app.get("/health", (req, res) => {
+  return res.json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+  });
+});
+
+// Also expose under /api/health so the client can probe via the proxied path
+app.get("/api/health", (req, res) => {
+  return res.json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+  });
+});
 
 app.use("/api/user", userRouter);
 app.use("/api/auth", authRouter);

@@ -8,7 +8,9 @@ export const createListing = async (req, res, next) => {
   try {
     // Only owners and admins can create listings
     if (req.user.role !== "owner" && req.user.role !== "admin") {
-      return next(errorHandler(403, "Only property owners can create listings!"));
+      return next(
+        errorHandler(403, "Only property owners can create listings!")
+      );
     }
 
     // Geocode address if provided
@@ -50,7 +52,11 @@ export const deleteListing = async (req, res, next) => {
 
   try {
     // Delete Cloudinary images if configured and listing has imageUrls
-    if (isCloudinaryConfigured() && listing.imageUrls && listing.imageUrls.length > 0) {
+    if (
+      isCloudinaryConfigured() &&
+      listing.imageUrls &&
+      listing.imageUrls.length > 0
+    ) {
       // Extract public_ids from imageUrls (assuming format: https://res.cloudinary.com/.../image/upload/v1234567890/folder/public_id.jpg)
       // Or store public_ids separately - for now, try to extract from URL
       const deletePromises = listing.imageUrls.map(async (url) => {
@@ -139,7 +145,7 @@ export const getListings = async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit) || 9;
     const startIndex = parseInt(req.query.startIndex) || 0;
-    
+
     // Basic filters
     let offer = req.query.offer;
     if (offer === undefined || offer === "false") {
@@ -167,7 +173,9 @@ export const getListings = async (req, res, next) => {
 
     // Price range filters
     const minPrice = req.query.minPrice ? parseInt(req.query.minPrice) : 0;
-    const maxPrice = req.query.maxPrice ? parseInt(req.query.maxPrice) : Number.MAX_SAFE_INTEGER;
+    const maxPrice = req.query.maxPrice
+      ? parseInt(req.query.maxPrice)
+      : Number.MAX_SAFE_INTEGER;
 
     // Build query - only show approved listings to non-admins
     const query = {

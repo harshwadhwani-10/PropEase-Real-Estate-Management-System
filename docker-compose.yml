@@ -1,0 +1,35 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+    networks:
+      - propease-network
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=/api
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    env_file:
+      - client/.env
+    depends_on:
+      - api
+    networks:
+      - propease-network
+
+networks:
+  propease-network:
+    driver: bridge

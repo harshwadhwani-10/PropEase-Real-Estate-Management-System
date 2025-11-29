@@ -1,0 +1,61 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "ap-south-1"
+    ACCOUNT_ID: "030569356856"
+    ECR_REPO_FRONTEND: "propease-frontend"
+    ECR_REPO_BACKEND: "propease-backend"
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - export AWS_DEFAULT_REGION=$AWS_REGION
+
+      # Login (SINGLE LINE - VERY IMPORTANT)
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+
+      # Create tags
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+
+      # Repo URIs
+      - BACKEND_REPO_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_BACKEND
+      - FRONTEND_REPO_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_FRONTEND
+
+  build:
+    commands:
+      - echo Build started on `date`
+
+      # Backend
+      - docker build -t backend:latest .
+      - docker tag backend:latest $BACKEND_REPO_URI:latest
+      - docker tag backend:latest $BACKEND_REPO_URI:$IMAGE_TAG
+      - cd ..
+
+      # Frontend
+      - cd client
+      - docker build -t frontend:latest .
+      - docker tag frontend:latest $FRONTEND_REPO_URI:latest
+      - docker tag frontend:latest $FRONTEND_REPO_URI:$IMAGE_TAG
+      - cd ..
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+
+      # Push images
+      - docker push $BACKEND_REPO_URI:latest
+      - docker push $BACKEND_REPO_URI:$IMAGE_TAG
+      - docker push $FRONTEND_REPO_URI:latest
+      - docker push $FRONTEND_REPO_URI:$IMAGE_TAG
+
+      # Create ECS images definitions
+      - printf '[{"name":"backend","imageUri":"%s"}]' $BACKEND_REPO_URI:$IMAGE_TAG > imagedefinitions-backend.json
+      - printf '[{"name":"frontend","imageUri":"%s"}]' $FRONTEND_REPO_URI:$IMAGE_TAG > imagedefinitions-frontend.json
+
+artifacts:
+  files:
+    - imagedefinitions-backend.json
+    - imagedefinitions-frontend.json
