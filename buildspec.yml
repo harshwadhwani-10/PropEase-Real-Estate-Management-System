@@ -12,8 +12,6 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - export AWS_DEFAULT_REGION=$AWS_REGION
-
-      # Login (SINGLE LINE - VERY IMPORTANT)
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
 
       # Create tags
@@ -34,11 +32,9 @@ phases:
       - docker tag backend:latest $BACKEND_REPO_URI:$IMAGE_TAG
 
       # Frontend
-      - cd client
-      - docker build -t frontend:latest -f Dockerfile .
+      - docker build -t frontend:latest -f client/Dockerfile client
       - docker tag frontend:latest $FRONTEND_REPO_URI:latest
       - docker tag frontend:latest $FRONTEND_REPO_URI:$IMAGE_TAG
-      - cd ..
 
   post_build:
     commands:
@@ -50,11 +46,14 @@ phases:
       - docker push $FRONTEND_REPO_URI:latest
       - docker push $FRONTEND_REPO_URI:$IMAGE_TAG
 
-      # Create ECS images definitions
-      - printf '[{"name":"backend","imageUri":"%s"}]' $BACKEND_REPO_URI:$IMAGE_TAG > imagedefinitions-backend.json
-      - printf '[{"name":"frontend","imageUri":"%s"}]' $FRONTEND_REPO_URI:$IMAGE_TAG > imagedefinitions-frontend.json
+      # Create artifact folder
+      - mkdir -p artifacts
+
+      # Create ECS image definitions
+      - printf '[{"name":"backend","imageUri":"%s"}]' $BACKEND_REPO_URI:$IMAGE_TAG > artifacts/imagedefinitions-backend.json
+      - printf '[{"name":"frontend","imageUri":"%s"}]' $FRONTEND_REPO_URI:$IMAGE_TAG > artifacts/imagedefinitions-frontend.json
 
 artifacts:
   files:
-    - imagedefinitions-backend.json
-    - imagedefinitions-frontend.json
+    - artifacts/imagedefinitions-backend.json
+    - artifacts/imagedefinitions-frontend.json
