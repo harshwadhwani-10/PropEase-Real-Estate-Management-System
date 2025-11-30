@@ -16,7 +16,7 @@ phases:
 
       # Create tags
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      - IMAGE_TAG=${COMMIT_HASH:-latest}
 
       # Repo URIs
       - BACKEND_REPO_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_BACKEND
@@ -53,11 +53,18 @@ phases:
       # Create artifact folder
       - mkdir -p artifacts
 
-      # Create ECS images definitions
-      - printf '[{"name":"backend","imageUri":"%s"}]' $BACKEND_REPO_URI:$IMAGE_TAG > imagedefinitions-backend.json
-      - printf '[{"name":"frontend","imageUri":"%s"}]' $FRONTEND_REPO_URI:$IMAGE_TAG > imagedefinitions-frontend.json
+      # Create ECS images definitions in artifacts folder
+      - printf '[{"name":"backend","imageUri":"%s"}]' "$BACKEND_REPO_URI:$IMAGE_TAG" > artifacts/imagedefinitions-backend.json
+      - printf '[{"name":"frontend","imageUri":"%s"}]' "$FRONTEND_REPO_URI:$IMAGE_TAG" > artifacts/imagedefinitions-frontend.json
+      - echo "Artifacts directory listing:"
+      - ls -la artifacts || true
+      - echo "Backend artifact contents:"
+      - cat artifacts/imagedefinitions-backend.json || true
+      - echo "Frontend artifact contents:"
+      - cat artifacts/imagedefinitions-frontend.json || true
 
 artifacts:
+  base-directory: artifacts
   files:
-    - artifacts/imagedefinitions-backend.json
-    - artifacts/imagedefinitions-frontend.json
+    - imagedefinitions-backend.json
+    - imagedefinitions-frontend.json
