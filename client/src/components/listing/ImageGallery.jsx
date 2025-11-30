@@ -24,7 +24,10 @@ export default function ImageGallery({ images, name }) {
         <Swiper
           modules={[Navigation, Thumbs]}
           navigation
-          thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+          thumbs={{
+            swiper:
+              thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null,
+          }}
           className="main-swiper"
         >
           {images.map((image, index) => (

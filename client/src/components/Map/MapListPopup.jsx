@@ -24,14 +24,19 @@ export default function MapListPopup({ listings = [], onNavigate }) {
     <div className="p-2 max-w-sm w-72">
       <div className="mb-1.5">
         <h3 className="font-bold text-sm text-gray-900 mb-0.5">
-          {listings.length} {listings.length === 1 ? "Property" : "Properties"} Nearby
+          {listings.length} {listings.length === 1 ? "Property" : "Properties"}{" "}
+          Nearby
         </h3>
-        <p className="text-xs text-gray-500">Click on a property to view details</p>
+        <p className="text-xs text-gray-500">
+          Click on a property to view details
+        </p>
       </div>
-      
+
       <div className="space-y-1.5 max-h-96 overflow-y-auto">
         {listings.map((listing) => {
-          const price = listing.offer ? listing.discountPrice : listing.regularPrice;
+          const price = listing.offer
+            ? listing.discountPrice
+            : listing.regularPrice;
           const priceText =
             price >= 1000000
               ? `₹${(price / 1000000).toFixed(1)}M`
@@ -47,7 +52,9 @@ export default function MapListPopup({ listings = [], onNavigate }) {
               {/* Small Image */}
               <div className="relative flex-shrink-0">
                 <img
-                  src={listing.imageUrls?.[0] || "https://via.placeholder.com/300"}
+                  src={
+                    listing.imageUrls?.[0] || "https://via.placeholder.com/300"
+                  }
                   alt={listing.name}
                   className="w-14 h-14 object-cover rounded-md shadow-sm group-hover:shadow-md transition-shadow"
                 />
@@ -69,20 +76,25 @@ export default function MapListPopup({ listings = [], onNavigate }) {
                   <h4 className="font-semibold text-xs text-gray-900 mb-0.5 line-clamp-1 leading-tight">
                     {truncateText(listing.name, 35)}
                   </h4>
-                  
+
                   <div className="flex items-center gap-1 mb-0.5">
                     <MapPin className="w-3 h-3 text-orange-500 flex-shrink-0" />
-                    <p className="text-[10px] text-gray-600 line-clamp-1 leading-tight">{truncateText(listing.address, 30)}</p>
+                    <p className="text-[10px] text-gray-600 line-clamp-1 leading-tight">
+                      {truncateText(listing.address, 30)}
+                    </p>
                   </div>
-                  
+
                   <p className="text-xs font-bold text-[#2A4365] mb-1 leading-tight">
                     {priceText}
                     {listing.type === "rent" && (
-                      <span className="text-[10px] font-normal text-gray-600"> /mo</span>
+                      <span className="text-[10px] font-normal text-gray-600">
+                        {" "}
+                        /mo
+                      </span>
                     )}
                   </p>
                 </div>
-                
+
                 <Link
                   to={`/listing/${listing._id}`}
                   onClick={(e) => handleViewDetails(listing._id, e)}
@@ -98,4 +110,3 @@ export default function MapListPopup({ listings = [], onNavigate }) {
     </div>
   );
 }
-

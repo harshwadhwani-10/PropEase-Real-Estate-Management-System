@@ -16,4 +16,3 @@ export default function RoleProtectedRoute({ allowedRoles = [] }) {
 
   return <Outlet />;
 }
-

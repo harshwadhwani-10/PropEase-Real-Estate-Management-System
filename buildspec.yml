@@ -27,14 +27,18 @@ phases:
       - echo Build started on `date`
 
       # Backend
+      - cd api
       - docker build -t backend:latest .
       - docker tag backend:latest $BACKEND_REPO_URI:latest
       - docker tag backend:latest $BACKEND_REPO_URI:$IMAGE_TAG
+      - cd ..
 
       # Frontend
+      - cd client
       - docker build -t frontend:latest -f client/Dockerfile client
       - docker tag frontend:latest $FRONTEND_REPO_URI:latest
       - docker tag frontend:latest $FRONTEND_REPO_URI:$IMAGE_TAG
+      - cd ..
 
   post_build:
     commands:

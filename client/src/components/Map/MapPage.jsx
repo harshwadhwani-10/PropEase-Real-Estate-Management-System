@@ -2,10 +2,10 @@ import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MapPin, RotateCcw } from "lucide-react";
-import MapLeaflet from "./MapLeaflet";
-import MapFilterPanel from "./MapFilterPanel";
-import LoadingSkeleton from "../common/LoadingSkeleton";
-import EmptyState from "../common/EmptyState";
+import MapLeaflet from "./MapLeaflet.jsx";
+import MapFilterPanel from "./MapFilterPanel.jsx";
+import LoadingSkeleton from "../common/LoadingSkeleton.jsx";
+import EmptyState from "../common/EmptyState.jsx";
 import api from "../../utils/api";
 
 export default function MapPage() {
@@ -34,11 +34,15 @@ export default function MapPage() {
         setLoading(true);
         const urlParams = new URLSearchParams(location.search);
         const searchQuery = urlParams.toString();
-        const res = await api.get(`/api/listing/get?${searchQuery || "status=approved&limit=200"}`);
+        const res = await api.get(
+          `/api/listing/get?${searchQuery || "status=approved&limit=200"}`
+        );
         const data = res.data || [];
 
         // Filter only approved listings
-        const approvedListings = data.filter((listing) => listing.status === "approved");
+        const approvedListings = data.filter(
+          (listing) => listing.status === "approved"
+        );
         setListings(approvedListings);
 
         // Keep default Gandhinagar center - don't auto-calculate from listings
@@ -63,7 +67,8 @@ export default function MapPage() {
     filtered = filtered.filter((listing) => {
       if (listing.type === "rent" && !filters.showRent) return false;
       if (listing.type === "sale" && !filters.showSale) return false;
-      if (listing.type === "commercial" && !filters.showCommercial) return false;
+      if (listing.type === "commercial" && !filters.showCommercial)
+        return false;
       return true;
     });
 
@@ -71,10 +76,13 @@ export default function MapPage() {
   }, [listings, filters]);
 
   // Handle marker click - navigate to listing page
-  const handleMarkerClick = useCallback((listingId) => {
-    setSelectedListingId(listingId);
-    navigate(`/listing/${listingId}`);
-  }, [navigate]);
+  const handleMarkerClick = useCallback(
+    (listingId) => {
+      setSelectedListingId(listingId);
+      navigate(`/listing/${listingId}`);
+    },
+    [navigate]
+  );
 
   // Handle filter change
   const handleFilterChange = useCallback((key, value) => {
@@ -118,7 +126,9 @@ export default function MapPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <p className="text-red-600 font-semibold mb-2">Error loading map data</p>
+          <p className="text-red-600 font-semibold mb-2">
+            Error loading map data
+          </p>
           <button
             onClick={() => window.location.reload()}
             className="bg-[#2A4365] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#1e2f47] transition-colors"

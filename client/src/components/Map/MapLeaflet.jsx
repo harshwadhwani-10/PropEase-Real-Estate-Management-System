@@ -1,16 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import L from "leaflet";
-import MapPopup from "./MapPopup";
-import MapListPopup from "./MapListPopup";
-import MapSearchBar from "./MapSearchBar";
-import { RecenterButtonInner } from "./RecenterButton";
+import MapPopup from "./MapPopup.jsx";
+import MapListPopup from "./MapListPopup.jsx";
+import MapSearchBar from "./MapSearchBar.jsx";
+import { RecenterButtonInner } from "./RecenterButton.jsx";
 
 // Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
@@ -35,22 +43,38 @@ const createCustomIcon = (price, type, isHighlighted = false) => {
   const fontSize = 9;
 
   const svg = `
-    <svg width="${pinWidth}" height="${pinHeight + 5}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${pinWidth} ${pinHeight + 5}">
+    <svg width="${pinWidth}" height="${
+    pinHeight + 5
+  }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${pinWidth} ${
+    pinHeight + 5
+  }">
       <!-- Pin shadow -->
-      <ellipse cx="${pinWidth / 2}" cy="${pinHeight + 2}" rx="${pinWidth / 4}" ry="2" fill="rgba(0,0,0,0.3)"/>
+      <ellipse cx="${pinWidth / 2}" cy="${pinHeight + 2}" rx="${
+    pinWidth / 4
+  }" ry="2" fill="rgba(0,0,0,0.3)"/>
       <!-- Pin body (teardrop/pin shape) -->
-      <path d="M ${pinWidth / 2} 0 
+      <path d="M ${pinWidth / 2} 0
               L ${pinWidth * 0.75} ${pinHeight * 0.6}
-              Q ${pinWidth * 0.8} ${pinHeight * 0.8}, ${pinWidth / 2} ${pinHeight}
-              Q ${pinWidth * 0.2} ${pinHeight * 0.8}, ${pinWidth * 0.25} ${pinHeight * 0.6}
-              Z" 
-            fill="${color}" 
-            stroke="#FFFFFF" 
+              Q ${pinWidth * 0.8} ${pinHeight * 0.8}, ${
+    pinWidth / 2
+  } ${pinHeight}
+              Q ${pinWidth * 0.2} ${pinHeight * 0.8}, ${pinWidth * 0.25} ${
+    pinHeight * 0.6
+  }
+              Z"
+            fill="${color}"
+            stroke="#FFFFFF"
             stroke-width="2.5"
-            style="filter: ${isHighlighted ? 'drop-shadow(0 0 6px ' + color + ')' : 'none'};"/>
+            style="filter: ${
+              isHighlighted ? "drop-shadow(0 0 6px " + color + ")" : "none"
+            };"/>
       <!-- Price badge circle on top -->
-      <circle cx="${pinWidth / 2}" cy="${pinHeight * 0.2}" r="${pinWidth * 0.22}" fill="${color}" stroke="#FFFFFF" stroke-width="2"/>
-      <text x="${pinWidth / 2}" y="${pinHeight * 0.25}" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="bold" fill="#FFFFFF" text-anchor="middle">${priceText}</text>
+      <circle cx="${pinWidth / 2}" cy="${pinHeight * 0.2}" r="${
+    pinWidth * 0.22
+  }" fill="${color}" stroke="#FFFFFF" stroke-width="2"/>
+      <text x="${pinWidth / 2}" y="${
+    pinHeight * 0.25
+  }" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="bold" fill="#FFFFFF" text-anchor="middle">${priceText}</text>
     </svg>
   `;
 
@@ -113,7 +137,7 @@ function findNearbyMarkers(clickedListing, allListings, map, pixelRadius = 50) {
     // Calculate pixel distance
     const distance = Math.sqrt(
       Math.pow(clickedPoint.x - listingPoint.x, 2) +
-      Math.pow(clickedPoint.y - listingPoint.y, 2)
+        Math.pow(clickedPoint.y - listingPoint.y, 2)
     );
 
     if (distance <= pixelRadius) {
@@ -184,7 +208,7 @@ export default function MapLeaflet({
     if (!map) return;
 
     const zoom = map.getZoom();
-    
+
     // If zoomed in enough (>= 13), show individual popup
     if (zoom >= 13) {
       e.target.openPopup();
@@ -193,27 +217,32 @@ export default function MapLeaflet({
     }
 
     // If zoomed out, check for nearby markers
-    const nearbyListings = findNearbyMarkers(clickedListing, validListings, map, 60);
-    
+    const nearbyListings = findNearbyMarkers(
+      clickedListing,
+      validListings,
+      map,
+      60
+    );
+
     // If multiple markers nearby, show list popup
     if (nearbyListings.length > 1) {
       const listPosition = [
         clickedListing.location.coordinates[1],
         clickedListing.location.coordinates[0],
       ];
-      
+
       setClickedMarkerData({
         listings: nearbyListings,
         position: listPosition,
       });
-      
+
       // Close any open individual popups
       map.eachLayer((layer) => {
         if (layer instanceof L.Marker && layer.isPopupOpen()) {
           layer.closePopup();
         }
       });
-      
+
       // The popup will be opened via useEffect when the marker is rendered
     } else {
       // Single marker, show individual popup
@@ -224,7 +253,11 @@ export default function MapLeaflet({
 
   // Open list popup when marker data is set
   useEffect(() => {
-    if (clickedMarkerData && clickedMarkerData.listings.length > 1 && listPopupRef.current) {
+    if (
+      clickedMarkerData &&
+      clickedMarkerData.listings.length > 1 &&
+      listPopupRef.current
+    ) {
       // Small delay to ensure marker is rendered
       const timer = setTimeout(() => {
         if (listPopupRef.current) {
@@ -257,11 +290,11 @@ export default function MapLeaflet({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        
+
         {/* Recenter Button (inside map context) */}
         {onRecenter && (
-          <RecenterButtonInner 
-            center={initialCenter || center} 
+          <RecenterButtonInner
+            center={initialCenter || center}
             zoom={12}
             onLocationUpdate={(location) => {
               // Update center when user location is found
@@ -279,7 +312,9 @@ export default function MapLeaflet({
             listing.location.coordinates[0], // lng
           ];
 
-          const price = listing.offer ? listing.discountPrice : listing.regularPrice;
+          const price = listing.offer
+            ? listing.discountPrice
+            : listing.regularPrice;
           const isSelected = selectedListingId === listing._id;
 
           return (
@@ -310,12 +345,12 @@ export default function MapLeaflet({
 
         {/* List Popup for Clustered Markers */}
         {clickedMarkerData && clickedMarkerData.listings.length > 1 && (
-          <Marker 
-            position={clickedMarkerData.position} 
-            icon={L.divIcon({ 
-              className: 'hidden',
+          <Marker
+            position={clickedMarkerData.position}
+            icon={L.divIcon({
+              className: "hidden",
               iconSize: [0, 0],
-              iconAnchor: [0, 0]
+              iconAnchor: [0, 0],
             })}
             ref={listPopupRef}
           >
@@ -326,7 +361,10 @@ export default function MapLeaflet({
               autoPanPadding={[50, 50]}
               onClose={() => setClickedMarkerData(null)}
             >
-              <MapListPopup listings={clickedMarkerData.listings} onNavigate={onMarkerClick} />
+              <MapListPopup
+                listings={clickedMarkerData.listings}
+                onNavigate={onMarkerClick}
+              />
             </Popup>
           </Marker>
         )}

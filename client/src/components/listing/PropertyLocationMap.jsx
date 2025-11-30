@@ -1,16 +1,24 @@
 import { useEffect, useState, useMemo, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import { Link } from "react-router-dom";
 import L from "leaflet";
 import { MapPin } from "lucide-react";
 import api from "../../utils/api";
-import MapListPopup from "../map/MapListPopup";
+import MapListPopup from "../Map/MapListPopup.jsx";
 
 // Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
@@ -74,14 +82,14 @@ const createNearbyPropertyIcon = (price, type) => {
 function MapInitializer({ center, zoom }) {
   const map = useMap();
   const [initialized, setInitialized] = useState(false);
-  
+
   useEffect(() => {
     if (center && zoom && !initialized && map) {
       map.setView(center, zoom);
       setInitialized(true);
     }
   }, [map, center, zoom, initialized]);
-  
+
   return null;
 }
 
@@ -118,7 +126,7 @@ function findNearbyMarkers(clickedListing, allListings, map, pixelRadius = 50) {
     // Calculate pixel distance
     const distance = Math.sqrt(
       Math.pow(clickedPoint.x - listingPoint.x, 2) +
-      Math.pow(clickedPoint.y - listingPoint.y, 2)
+        Math.pow(clickedPoint.y - listingPoint.y, 2)
     );
 
     if (distance <= pixelRadius) {
@@ -153,7 +161,10 @@ export default function PropertyLocationMap({ listing }) {
       return [listing.location.coordinates[1], listing.location.coordinates[0]]; // [lat, lng]
     }
     return null;
-  }, [listing?.location?.coordinates?.[0], listing?.location?.coordinates?.[1]]);
+  }, [
+    listing?.location?.coordinates?.[0],
+    listing?.location?.coordinates?.[1],
+  ]);
 
   // Get user's current location on component mount (for context, but prioritize property location)
   useEffect(() => {
@@ -179,7 +190,7 @@ export default function PropertyLocationMap({ listing }) {
   // Only set once to prevent infinite loops
   useEffect(() => {
     if (hasInitializedMapRef.current) return; // Already initialized, don't update again
-    
+
     if (propertyCoords) {
       // Show property location
       setMapCenter(propertyCoords);
@@ -215,7 +226,7 @@ export default function PropertyLocationMap({ listing }) {
 
     const fetchNearbyProperties = async () => {
       hasFetchedRef.current = true;
-      
+
       try {
         // Fetch approved listings within a reasonable radius
         const res = await api.get(`/api/listing/get?status=approved&limit=50`);
@@ -281,7 +292,11 @@ export default function PropertyLocationMap({ listing }) {
 
   // Open list popup when marker data is set
   useEffect(() => {
-    if (clickedMarkerData && clickedMarkerData.listings.length > 1 && listPopupRef.current) {
+    if (
+      clickedMarkerData &&
+      clickedMarkerData.listings.length > 1 &&
+      listPopupRef.current
+    ) {
       // Small delay to ensure marker is rendered
       const timer = setTimeout(() => {
         if (listPopupRef.current) {
@@ -299,7 +314,9 @@ export default function PropertyLocationMap({ listing }) {
           <MapPin className="w-6 h-6 text-[#2A4365]" />
           Property Location
         </h2>
-        <p className="text-gray-600">Location information not available for this property.</p>
+        <p className="text-gray-600">
+          Location information not available for this property.
+        </p>
       </div>
     );
   }
@@ -311,7 +328,8 @@ export default function PropertyLocationMap({ listing }) {
         Property Location
       </h2>
       <p className="text-gray-600 mb-4">
-        Here is the property location. Zoom out to see other properties in the area.
+        Here is the property location. Zoom out to see other properties in the
+        area.
       </p>
 
       <div className="relative h-96 rounded-xl overflow-hidden border border-gray-200">
@@ -325,158 +343,181 @@ export default function PropertyLocationMap({ listing }) {
             dragging={true}
             touchZoom={true}
             doubleClickZoom={true}
-            key={listing?._id || 'map'} // Only remount when listing changes
+            key={listing?._id || "map"} // Only remount when listing changes
             whenReady={({ target }) => setMapInstance(target)}
           >
             <MapInitializer center={mapCenter} zoom={mapZoom} />
             <ZoomTracker onZoomChange={setCurrentZoom} />
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
 
-          {/* Current Property Marker */}
-          <Marker position={propertyCoords} icon={createCurrentPropertyIcon()}>
-            <Popup>
-              <div className="p-2">
-                <h3 className="font-bold text-sm mb-1 text-gray-900">{listing.name}</h3>
-                <p className="text-xs text-gray-600 mb-2">{listing.address}</p>
-                <p className="text-sm font-bold text-[#2A4365]">
-                  ₹
-                  {(listing.offer ? listing.discountPrice : listing.regularPrice).toLocaleString(
-                    "en-IN"
-                  )}
-                  {listing.type === "rent" && " / month"}
-                </p>
-                <p className="text-xs text-orange-600 mt-1 font-semibold">📍 This Property</p>
-              </div>
-            </Popup>
-          </Marker>
-
-          {/* Nearby Properties Markers */}
-          {!loading &&
-            nearbyListings.map((nearbyListing) => {
-              const nearbyCoords = [
-                nearbyListing.location.coordinates[1],
-                nearbyListing.location.coordinates[0],
-              ];
-              const price = nearbyListing.offer
-                ? nearbyListing.discountPrice
-                : nearbyListing.regularPrice;
-
-              return (
-                <Marker
-                  key={nearbyListing._id}
-                  position={nearbyCoords}
-                  icon={createNearbyPropertyIcon(price, nearbyListing.type)}
-                  eventHandlers={{
-                    click: (e) => {
-                      if (!mapInstance) return;
-                      
-                      const zoom = mapInstance.getZoom();
-                      
-                      // If zoomed in enough (>= 13), show individual popup
-                      if (zoom >= 13) {
-                        e.target.openPopup();
-                        setClickedMarkerData(null);
-                        return;
-                      }
-
-                      // If zoomed out, check for nearby markers
-                      // Include current listing in the search (convert to same format)
-                      const currentListingForSearch = {
-                        ...listing,
-                        location: listing.location,
-                      };
-                      const allNearbyListings = [currentListingForSearch, ...nearbyListings];
-                      const nearbyMarkers = findNearbyMarkers(nearbyListing, allNearbyListings, mapInstance, 60);
-                      
-                      // If multiple markers nearby, show list popup
-                      if (nearbyMarkers.length > 1) {
-                        const listPosition = [
-                          nearbyListing.location.coordinates[1],
-                          nearbyListing.location.coordinates[0],
-                        ];
-                        
-                        setClickedMarkerData({
-                          listings: nearbyMarkers,
-                          position: listPosition,
-                        });
-                        
-                        // Close any open individual popups
-                        mapInstance.eachLayer((layer) => {
-                          if (layer instanceof L.Marker && layer.isPopupOpen()) {
-                            layer.closePopup();
-                          }
-                        });
-                      } else {
-                        // Single marker, show individual popup
-                        e.target.openPopup();
-                        setClickedMarkerData(null);
-                      }
-                    },
-                  }}
-                >
-                  <Popup>
-                    <div className="p-2 max-w-xs">
-                      <img
-                        src={nearbyListing.imageUrls?.[0] || "https://via.placeholder.com/300"}
-                        alt={nearbyListing.name}
-                        className="w-full h-24 object-cover rounded-lg mb-2"
-                      />
-                      <h3 className="font-bold text-sm mb-1 text-gray-900 line-clamp-1">
-                        {nearbyListing.name}
-                      </h3>
-                      <p className="text-xs text-gray-600 mb-2 line-clamp-1">
-                        {nearbyListing.address}
-                      </p>
-                      <p className="text-sm font-bold text-[#2A4365] mb-2">
-                        ₹{price.toLocaleString("en-IN")}
-                        {nearbyListing.type === "rent" && " / month"}
-                      </p>
-                      <Link
-                        to={`/listing/${nearbyListing._id}`}
-                        className="block w-full bg-[#2A4365] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#1e2f47] transition-colors text-center"
-                      >
-                        View Details
-                      </Link>
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-            })}
-
-          {/* List Popup for Clustered Markers */}
-          {clickedMarkerData && clickedMarkerData.listings.length > 1 && (
-            <Marker 
-              position={clickedMarkerData.position} 
-              icon={L.divIcon({ 
-                className: 'hidden',
-                iconSize: [0, 0],
-                iconAnchor: [0, 0]
-              })}
-              ref={listPopupRef}
+            {/* Current Property Marker */}
+            <Marker
+              position={propertyCoords}
+              icon={createCurrentPropertyIcon()}
             >
-              <Popup
-                closeButton={true}
-                className="custom-popup"
-                autoPan={true}
-                autoPanPadding={[50, 50]}
-                onClose={() => setClickedMarkerData(null)}
-              >
-                <MapListPopup 
-                  listings={clickedMarkerData.listings} 
-                  onNavigate={(listingId) => {
-                    window.location.href = `/listing/${listingId}`;
-                  }} 
-                />
+              <Popup>
+                <div className="p-2">
+                  <h3 className="font-bold text-sm mb-1 text-gray-900">
+                    {listing.name}
+                  </h3>
+                  <p className="text-xs text-gray-600 mb-2">
+                    {listing.address}
+                  </p>
+                  <p className="text-sm font-bold text-[#2A4365]">
+                    ₹
+                    {(listing.offer
+                      ? listing.discountPrice
+                      : listing.regularPrice
+                    ).toLocaleString("en-IN")}
+                    {listing.type === "rent" && " / month"}
+                  </p>
+                  <p className="text-xs text-orange-600 mt-1 font-semibold">
+                    📍 This Property
+                  </p>
+                </div>
               </Popup>
             </Marker>
-          )}
+
+            {/* Nearby Properties Markers */}
+            {!loading &&
+              nearbyListings.map((nearbyListing) => {
+                const nearbyCoords = [
+                  nearbyListing.location.coordinates[1],
+                  nearbyListing.location.coordinates[0],
+                ];
+                const price = nearbyListing.offer
+                  ? nearbyListing.discountPrice
+                  : nearbyListing.regularPrice;
+
+                return (
+                  <Marker
+                    key={nearbyListing._id}
+                    position={nearbyCoords}
+                    icon={createNearbyPropertyIcon(price, nearbyListing.type)}
+                    eventHandlers={{
+                      click: (e) => {
+                        if (!mapInstance) return;
+
+                        const zoom = mapInstance.getZoom();
+
+                        // If zoomed in enough (>= 13), show individual popup
+                        if (zoom >= 13) {
+                          e.target.openPopup();
+                          setClickedMarkerData(null);
+                          return;
+                        }
+
+                        // If zoomed out, check for nearby markers
+                        // Include current listing in the search (convert to same format)
+                        const currentListingForSearch = {
+                          ...listing,
+                          location: listing.location,
+                        };
+                        const allNearbyListings = [
+                          currentListingForSearch,
+                          ...nearbyListings,
+                        ];
+                        const nearbyMarkers = findNearbyMarkers(
+                          nearbyListing,
+                          allNearbyListings,
+                          mapInstance,
+                          60
+                        );
+
+                        // If multiple markers nearby, show list popup
+                        if (nearbyMarkers.length > 1) {
+                          const listPosition = [
+                            nearbyListing.location.coordinates[1],
+                            nearbyListing.location.coordinates[0],
+                          ];
+
+                          setClickedMarkerData({
+                            listings: nearbyMarkers,
+                            position: listPosition,
+                          });
+
+                          // Close any open individual popups
+                          mapInstance.eachLayer((layer) => {
+                            if (
+                              layer instanceof L.Marker &&
+                              layer.isPopupOpen()
+                            ) {
+                              layer.closePopup();
+                            }
+                          });
+                        } else {
+                          // Single marker, show individual popup
+                          e.target.openPopup();
+                          setClickedMarkerData(null);
+                        }
+                      },
+                    }}
+                  >
+                    <Popup>
+                      <div className="p-2 max-w-xs">
+                        <img
+                          src={
+                            nearbyListing.imageUrls?.[0] ||
+                            "https://via.placeholder.com/300"
+                          }
+                          alt={nearbyListing.name}
+                          className="w-full h-24 object-cover rounded-lg mb-2"
+                        />
+                        <h3 className="font-bold text-sm mb-1 text-gray-900 line-clamp-1">
+                          {nearbyListing.name}
+                        </h3>
+                        <p className="text-xs text-gray-600 mb-2 line-clamp-1">
+                          {nearbyListing.address}
+                        </p>
+                        <p className="text-sm font-bold text-[#2A4365] mb-2">
+                          ₹{price.toLocaleString("en-IN")}
+                          {nearbyListing.type === "rent" && " / month"}
+                        </p>
+                        <Link
+                          to={`/listing/${nearbyListing._id}`}
+                          className="block w-full bg-[#2A4365] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#1e2f47] transition-colors text-center"
+                        >
+                          View Details
+                        </Link>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+
+            {/* List Popup for Clustered Markers */}
+            {clickedMarkerData && clickedMarkerData.listings.length > 1 && (
+              <Marker
+                position={clickedMarkerData.position}
+                icon={L.divIcon({
+                  className: "hidden",
+                  iconSize: [0, 0],
+                  iconAnchor: [0, 0],
+                })}
+                ref={listPopupRef}
+              >
+                <Popup
+                  closeButton={true}
+                  className="custom-popup"
+                  autoPan={true}
+                  autoPanPadding={[50, 50]}
+                  onClose={() => setClickedMarkerData(null)}
+                >
+                  <MapListPopup
+                    listings={clickedMarkerData.listings}
+                    onNavigate={(listingId) => {
+                      window.location.href = `/listing/${listingId}`;
+                    }}
+                  />
+                </Popup>
+              </Marker>
+            )}
           </MapContainer>
         )}
       </div>
     </div>
   );
 }
-
