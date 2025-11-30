@@ -1,0 +1,44 @@
+curl -X POST http://localhost:5000/api/listing/create \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{
+    "name": "Test Property",
+    "description": "Test description",
+    "address": "123 Test St",
+    "regularPrice": 1000,
+    "discountPrice": 0,
+    "bathrooms": 2,
+    "bedrooms": 3,
+    "furnished": true,
+    "parking": true,
+    "type": "rent",
+    "offer": false,
+    "imageUrls": ["https://example.com/image.jpg"],
+    "userRef": "69105b220880cdab236d74de"
+  }'
+
+
+  curl -X POST http://localhost:5000/api/auth/signin \
+  -H "Content-Type: application/json" \
+  -c cookies.txt \
+  -d '{
+    "email": "buyer@test.com",
+    "password": "Test123"
+  }'
+
+  curl -X POST http://localhost:5000/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "Admin",
+    "email": "admin@test.com",
+    "password": "Admin123"
+  }'
+
+
+  curl -X POST http://localhost:5000/api/admin/listings/69105bd90880cdab236d74e3/approve \
+  -b admin_cookies.txt
+
+  curl -X POST http://localhost:5000/api/listing/update/69105bd90880cdab236d74e3 \
+  -H "Content-Type: application/json" \
+  -b admin_cookies.txt \
+  -d '{"name": "Updated Name"}'
