@@ -53,9 +53,9 @@ phases:
       # Create artifact folder
       - mkdir -p artifacts
 
-      # Create ECS image definitions
-      - printf '[{"name":"backend","imageUri":"%s"}]' $BACKEND_REPO_URI:$IMAGE_TAG > artifacts/imagedefinitions-backend.json
-      - printf '[{"name":"frontend","imageUri":"%s"}]' $FRONTEND_REPO_URI:$IMAGE_TAG > artifacts/imagedefinitions-frontend.json
+      # Create ECS images definitions
+      - printf '[{"name":"backend","imageUri":"%s"}]' $BACKEND_REPO_URI:$IMAGE_TAG > imagedefinitions-backend.json
+      - printf '[{"name":"frontend","imageUri":"%s"}]' $FRONTEND_REPO_URI:$IMAGE_TAG > imagedefinitions-frontend.json
 
 artifacts:
   files:
