@@ -1,9 +1,7 @@
 node_modules
-client/node_modules
-client/dist
+client
 uploads
 .env
 *.log
-.vscode
 .DS_Store
 npm-debug.log
