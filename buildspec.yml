@@ -35,7 +35,7 @@ phases:
 
       # Frontend
       - cd client
-      - docker build -t frontend:latest -f client/Dockerfile client
+      - docker build -t frontend:latest .
       - docker tag frontend:latest $FRONTEND_REPO_URI:latest
       - docker tag frontend:latest $FRONTEND_REPO_URI:$IMAGE_TAG
       - cd ..
