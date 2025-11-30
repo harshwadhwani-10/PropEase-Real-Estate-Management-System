@@ -11,116 +11,60 @@ phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - export AWS_DEFAULT_REGION=$AWS_REGION
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
 
+      # Create tags
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:-latest}
 
-      - BACKEND_REPO_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_BACKEND
-      - FRONTEND_REPO_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_FRONTEND
+      # Repo URIs
+      - BACKEND_REPO_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_BACKEND
+      - FRONTEND_REPO_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_FRONTEND
 
   build:
     commands:
-      - echo "Building backend..."
-      - docker build -t backend:latest -f api/Dockerfile .
+      - echo Build started on `date`
 
-      - echo "Tagging backend..."
+      # Backend
+      - cd api
+      - docker build -t backend:latest .
       - docker tag backend:latest $BACKEND_REPO_URI:latest
       - docker tag backend:latest $BACKEND_REPO_URI:$IMAGE_TAG
+      - cd ..
 
-      - echo "Building frontend..."
-      - docker build -t frontend:latest -f client/Dockerfile .
-
-      - echo "Tagging frontend..."
+      # Frontend
+      - cd client
+      - docker build -t frontend:latest .
       - docker tag frontend:latest $FRONTEND_REPO_URI:latest
       - docker tag frontend:latest $FRONTEND_REPO_URI:$IMAGE_TAG
+      - cd ..
 
   post_build:
     commands:
-      - echo "Pushing backend..."
+      - echo Build completed on `date`
+
+      # Push images
       - docker push $BACKEND_REPO_URI:latest
       - docker push $BACKEND_REPO_URI:$IMAGE_TAG
-
-      - echo "Pushing frontend..."
       - docker push $FRONTEND_REPO_URI:latest
       - docker push $FRONTEND_REPO_URI:$IMAGE_TAG
 
+      # Create artifact folder
       - mkdir -p artifacts
+
+      # Create ECS images definitions in artifacts folder
       - printf '[{"name":"backend","imageUri":"%s"}]' "$BACKEND_REPO_URI:$IMAGE_TAG" > artifacts/imagedefinitions-backend.json
       - printf '[{"name":"frontend","imageUri":"%s"}]' "$FRONTEND_REPO_URI:$IMAGE_TAG" > artifacts/imagedefinitions-frontend.json
+      - echo "Artifacts directory listing:"
+      - ls -la artifacts || true
+      - echo "Backend artifact contents:"
+      - cat artifacts/imagedefinitions-backend.json || true
+      - echo "Frontend artifact contents:"
+      - cat artifacts/imagedefinitions-frontend.json || true
 
 artifacts:
   base-directory: artifacts
   files:
     - imagedefinitions-backend.json
     - imagedefinitions-frontend.json
-# version: 0.2
-
-# env:
-#   variables:
-#     AWS_REGION: "ap-south-1"
-#     ACCOUNT_ID: "030569356856"
-#     ECR_REPO_FRONTEND: "propease-frontend"
-#     ECR_REPO_BACKEND: "propease-backend"
-
-# phases:
-#   pre_build:
-#     commands:
-#       - echo Logging in to Amazon ECR...
-#       - export AWS_DEFAULT_REGION=$AWS_REGION
-#       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-
-#       # Create tags
-#       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-#       - IMAGE_TAG=${COMMIT_HASH:-latest}
-
-#       # Repo URIs
-#       - BACKEND_REPO_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_BACKEND
-#       - FRONTEND_REPO_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_FRONTEND
-
-#   build:
-#     commands:
-#       - echo Build started on `date`
-
-#       # Backend
-#       - cd api
-#       - docker build -t backend:latest .
-#       - docker tag backend:latest $BACKEND_REPO_URI:latest
-#       - docker tag backend:latest $BACKEND_REPO_URI:$IMAGE_TAG
-#       - cd ..
-
-#       # Frontend
-#       - cd client
-#       - docker build -t frontend:latest .
-#       - docker tag frontend:latest $FRONTEND_REPO_URI:latest
-#       - docker tag frontend:latest $FRONTEND_REPO_URI:$IMAGE_TAG
-#       - cd ..
-
-#   post_build:
-#     commands:
-#       - echo Build completed on `date`
-
-#       # Push images
-#       - docker push $BACKEND_REPO_URI:latest
-#       - docker push $BACKEND_REPO_URI:$IMAGE_TAG
-#       - docker push $FRONTEND_REPO_URI:latest
-#       - docker push $FRONTEND_REPO_URI:$IMAGE_TAG
-
-#       # Create artifact folder
-#       - mkdir -p artifacts
-
-#       # Create ECS images definitions in artifacts folder
-#       - printf '[{"name":"backend","imageUri":"%s"}]' "$BACKEND_REPO_URI:$IMAGE_TAG" > artifacts/imagedefinitions-backend.json
-#       - printf '[{"name":"frontend","imageUri":"%s"}]' "$FRONTEND_REPO_URI:$IMAGE_TAG" > artifacts/imagedefinitions-frontend.json
-#       - echo "Artifacts directory listing:"
-#       - ls -la artifacts || true
-#       - echo "Backend artifact contents:"
-#       - cat artifacts/imagedefinitions-backend.json || true
-#       - echo "Frontend artifact contents:"
-#       - cat artifacts/imagedefinitions-frontend.json || true
-
-# artifacts:
-#   base-directory: artifacts
-#   files:
-#     - imagedefinitions-backend.json
-#     - imagedefinitions-frontend.json
