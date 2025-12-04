@@ -41,13 +41,29 @@ const limiter = rateLimit({
 });
 // app.use(limiter);
 
+// CORS configuration - allow frontend to send credentials (cookies, JWT)
+const allowedOrigins = [
+  "http://localhost:5173", // Local dev
+  "http://localhost:3000", // Local dev alternative
+  process.env.CLIENT_URL, // Vercel frontend or production domain
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://propease-frontend-alb-745773215.ap-south-1.elb.amazonaws.com",
-    ],
-    credentials: true,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`⚠️  CORS blocked origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // Allow cookies & authentication headers
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
