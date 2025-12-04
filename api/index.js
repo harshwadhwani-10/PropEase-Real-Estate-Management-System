@@ -41,13 +41,20 @@ const limiter = rateLimit({
 });
 // app.use(limiter);
 
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:5173",
+//       "http://propease-frontend-alb-745773215.ap-south-1.elb.amazonaws.com",
+//     ],
+//     credentials: true,
+//   })
+// );
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://propease-frontend-alb-745773215.ap-south-1.elb.amazonaws.com",
-    ],
-    credentials: true,
+    origin: "*",
+    credentials: false,
   })
 );
 
