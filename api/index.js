@@ -12,6 +12,7 @@ import path from "path";
 import cors from "cors";
 import xssClean from "xss-clean";
 import { logger } from "./utils/logger.js";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -46,6 +47,31 @@ app.use(
 app.options("*", cors({ origin: true, credentials: true }));
 
 app.use(logger);
+
+// Temporary debug endpoint to inspect incoming cookies and token decoding
+// REMOVE this in production after debugging
+app.get("/debug/cookies", (req, res) => {
+  try {
+    const token = req.cookies?.access_token;
+    let decoded = null;
+    if (token) {
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (err) {
+        decoded = { error: err.message };
+      }
+    }
+    return res.json({
+      success: true,
+      origin: req.headers.origin || null,
+      cookies: req.cookies || {},
+      tokenPresent: !!token,
+      decoded,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Health endpoints
 app.get("/health", (req, res) => {
