@@ -43,15 +43,15 @@ const limiter = rateLimit({
 
 // CORS configuration - allow frontend to send credentials (cookies, JWT)
 // Accept a comma-separated list in `CLIENT_URL` or `CLIENT_URLS` environment variable.
-const envClientUrls = (process.env.CLIENT_URLS || process.env.CLIENT_URL || "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+// const envClientUrls = (process.env.CLIENT_URLS || process.env.CLIENT_URL || "")
+//   .split(",")
+//   .map((s) => s.trim())
+//   .filter(Boolean);
 
 const allowedOrigins = [
-  "http://localhost:5173", // Local dev
-  "http://localhost:3000", // Local dev alternative
-  ...envClientUrls,
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://prop-ease-real-estate-management-sy.vercel.app",
 ];
 
 console.log("CORS allowed origins:", allowedOrigins);
