@@ -5,6 +5,16 @@ import User from "../models/user.model.js";
 export const verifyToken = async (req, res, next) => {
   const token = req.cookies.access_token;
 
+  // Debugging info: do not log the token value in production
+  try {
+    console.log(
+      "verifyToken: token present=",
+      !!token,
+      "origin=",
+      req.headers.origin
+    );
+  } catch (e) {}
+
   if (!token) return next(errorHandler(401, "Unauthorized"));
 
   try {

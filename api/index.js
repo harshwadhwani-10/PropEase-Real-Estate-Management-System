@@ -30,7 +30,7 @@ const app = express();
 
 app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
-app.use(helmet());
+// app.use(helmet());
 app.use(xssClean());
 
 const limiter = rateLimit({
@@ -42,24 +42,32 @@ const limiter = rateLimit({
 // app.use(limiter);
 
 // CORS configuration - allow frontend to send credentials (cookies, JWT)
+// Accept a comma-separated list in `CLIENT_URL` or `CLIENT_URLS` environment variable.
+const envClientUrls = (process.env.CLIENT_URLS || process.env.CLIENT_URL || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
   "http://localhost:5173", // Local dev
   "http://localhost:3000", // Local dev alternative
-  process.env.CLIENT_URL, // Vercel frontend or production domain
+  ...envClientUrls,
 ];
+
+console.log("CORS allowed origins:", allowedOrigins);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
+      // Allow requests with no origin (like mobile apps, server-to-server, or same-origin requests)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.warn(`⚠️  CORS blocked origin: ${origin}`);
-        callback(new Error("Not allowed by CORS"));
+        return callback(null, true);
       }
+
+      console.warn(`⚠️  CORS blocked origin: ${origin}`);
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true, // Allow cookies & authentication headers
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],

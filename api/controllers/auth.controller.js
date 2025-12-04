@@ -23,13 +23,12 @@ export const validateSignup = [
   body("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
-  body("confirmPassword")
-    .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error("Passwords do not match");
-      }
-      return true;
-    }),
+  body("confirmPassword").custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error("Passwords do not match");
+    }
+    return true;
+  }),
 ];
 
 //Sign-Up
@@ -41,17 +40,17 @@ export const signup = async (req, res, next) => {
   }
 
   const { username, email, password, role } = req.body;
-  
+
   // Validate role
   const validRoles = ["buyer", "owner"];
   const userRole = validRoles.includes(role) ? role : "buyer";
-  
+
   const hashedPassword = bcryptjs.hashSync(password, 10);
-  const newUser = new User({ 
-    username, 
-    email, 
+  const newUser = new User({
+    username,
+    email,
     password: hashedPassword,
-    role: userRole
+    role: userRole,
   });
   try {
     await newUser.save();
@@ -69,16 +68,19 @@ export const signin = async (req, res, next) => {
     if (!validUser) return next(errorHandler(404, "User Not Found!"));
     const validPassword = bcryptjs.compareSync(password, validUser.password);
     if (!validPassword) return next(errorHandler(401, "Wrong credentials!"));
-    const token = jwt.sign({ id: validUser._id, role: validUser.role }, process.env.JWT_SECRET);
+    const token = jwt.sign(
+      { id: validUser._id, role: validUser.role },
+      process.env.JWT_SECRET
+    );
     const { password: pass, ...rest } = validUser._doc;
-    res
-      .cookie("access_token", token, { 
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production'
-      })
-      .status(200)
-      .json(rest);
+
+    const cookieOptions = {
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+    };
+
+    res.cookie("access_token", token, cookieOptions).status(200).json(rest);
   } catch (error) {
     next(error);
   }
@@ -88,7 +90,7 @@ export const signin = async (req, res, next) => {
 export const google = async (req, res, next) => {
   try {
     const { email, name, photo, role } = req.body;
-    
+
     if (!email || !name) {
       return next(errorHandler(400, "Email and name are required"));
     }
@@ -96,55 +98,65 @@ export const google = async (req, res, next) => {
     const user = await User.findOne({ email });
     if (user) {
       // User exists, sign in
-      const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
+      const token = jwt.sign(
+        { id: user._id, role: user.role },
+        process.env.JWT_SECRET
+      );
       const { password: pass, ...rest } = user._doc;
-      res
-        .cookie("access_token", token, { 
-          httpOnly: true,
-          sameSite: 'lax',
-          secure: process.env.NODE_ENV === 'production'
-        })
-        .status(200)
-        .json(rest);
+      const cookieOptions = {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: process.env.NODE_ENV === "production",
+      };
+
+      res.cookie("access_token", token, cookieOptions).status(200).json(rest);
     } else {
       // New user, create account
       // Validate role if provided
       const validRoles = ["buyer", "owner"];
       const userRole = role && validRoles.includes(role) ? role : "buyer";
-      
+
       const generatedPassword =
         Math.random().toString(36).slice(-8) +
         Math.random().toString(36).slice(-8);
       const hashedPassword = bcryptjs.hashSync(generatedPassword, 10);
-      
+
       // Generate unique username
-      let username = name.split(" ").join("").toLowerCase() + Math.random().toString(36).slice(-4);
+      let username =
+        name.split(" ").join("").toLowerCase() +
+        Math.random().toString(36).slice(-4);
       let usernameExists = await User.findOne({ username });
       let counter = 0;
       while (usernameExists && counter < 10) {
-        username = name.split(" ").join("").toLowerCase() + Math.random().toString(36).slice(-4);
+        username =
+          name.split(" ").join("").toLowerCase() +
+          Math.random().toString(36).slice(-4);
         usernameExists = await User.findOne({ username });
         counter++;
       }
-      
+
       const newUser = new User({
         username,
         email,
         password: hashedPassword,
-        avatar: photo || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+        avatar:
+          photo ||
+          "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
         role: userRole,
       });
       await newUser.save();
-      const token = jwt.sign({ id: newUser._id, role: newUser.role }, process.env.JWT_SECRET);
+      const token = jwt.sign(
+        { id: newUser._id, role: newUser.role },
+        process.env.JWT_SECRET
+      );
       const { password: pass, ...rest } = newUser._doc;
-      res
-        .cookie("access_token", token, { 
-          httpOnly: true,
-          sameSite: 'lax',
-          secure: process.env.NODE_ENV === 'production'
-        })
-        .status(200)
-        .json(rest);
+      const cookieOptions = {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: process.env.NODE_ENV === "production",
+      };
+
+      res.cookie("access_token", token, cookieOptions).status(200).json(rest);
     }
   } catch (error) {
     next(error);
@@ -153,11 +165,14 @@ export const google = async (req, res, next) => {
 //Sign-Out
 export const signOut = async (req, res, next) => {
   try {
-    res.clearCookie("access_token", {
+    // When clearing cookies for cross-site cookies, ensure sameSite and secure match how they were set
+    const clearOptions = {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production'
-    });
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+    };
+
+    res.clearCookie("access_token", clearOptions);
     res.status(200).json("User has been logged out!");
   } catch (error) {
     next(error);
@@ -178,13 +193,17 @@ export const forgotPassword = async (req, res, next) => {
       // Don't reveal if email exists for security
       return res.status(200).json({
         success: true,
-        message: "If an account exists with this email, a password reset link has been sent.",
+        message:
+          "If an account exists with this email, a password reset link has been sent.",
       });
     }
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
 
     // Delete any existing reset tokens for this user
     await PasswordReset.deleteMany({ userId: user._id });
@@ -199,8 +218,10 @@ export const forgotPassword = async (req, res, next) => {
     await passwordReset.save();
 
     // Send reset email
-    const resetUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password?token=${resetToken}`;
-    
+    const resetUrl = `${
+      process.env.CLIENT_URL || "http://localhost:5173"
+    }/reset-password?token=${resetToken}`;
+
     try {
       await sendPasswordResetEmail({
         to: user.email,
@@ -211,12 +232,15 @@ export const forgotPassword = async (req, res, next) => {
       console.error("Error sending password reset email:", emailError);
       // Delete the token if email fails
       await PasswordReset.deleteOne({ _id: passwordReset._id });
-      return next(errorHandler(500, "Failed to send reset email. Please try again later."));
+      return next(
+        errorHandler(500, "Failed to send reset email. Please try again later.")
+      );
     }
 
     res.status(200).json({
       success: true,
-      message: "If an account exists with this email, a password reset link has been sent.",
+      message:
+        "If an account exists with this email, a password reset link has been sent.",
     });
   } catch (error) {
     next(error);
@@ -229,7 +253,9 @@ export const resetPassword = async (req, res, next) => {
     const { token, password, confirmPassword } = req.body;
 
     if (!token || !password || !confirmPassword) {
-      return next(errorHandler(400, "Token, password, and confirm password are required"));
+      return next(
+        errorHandler(400, "Token, password, and confirm password are required")
+      );
     }
 
     if (password !== confirmPassword) {
@@ -237,7 +263,9 @@ export const resetPassword = async (req, res, next) => {
     }
 
     if (password.length < 6) {
-      return next(errorHandler(400, "Password must be at least 6 characters long"));
+      return next(
+        errorHandler(400, "Password must be at least 6 characters long")
+      );
     }
 
     // Hash the token to compare with stored token
@@ -251,7 +279,12 @@ export const resetPassword = async (req, res, next) => {
     });
 
     if (!passwordReset) {
-      return next(errorHandler(400, "Invalid or expired reset token. Please request a new one."));
+      return next(
+        errorHandler(
+          400,
+          "Invalid or expired reset token. Please request a new one."
+        )
+      );
     }
 
     // Find the user
@@ -276,7 +309,8 @@ export const resetPassword = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Password reset successfully. You can now login with your new password.",
+      message:
+        "Password reset successfully. You can now login with your new password.",
     });
   } catch (error) {
     next(error);
