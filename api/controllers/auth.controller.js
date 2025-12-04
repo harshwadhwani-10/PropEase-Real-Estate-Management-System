@@ -74,11 +74,11 @@ export const signin = async (req, res, next) => {
     );
     const { password: pass, ...rest } = validUser._doc;
 
-    const cookieOptions = {
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      secure: process.env.NODE_ENV === "production",
-    };
+   const cookieOptions = {
+  httpOnly: true,
+  secure: true,         // Always true in Render (HTTPS)
+  sameSite: "none",     // Must be none for cross-site cookies
+};
 
     res.cookie("access_token", token, cookieOptions).status(200).json(rest);
   } catch (error) {
