@@ -48,40 +48,32 @@ const limiter = rateLimit({
 //   .map((s) => s.trim())
 //   .filter(Boolean);
 
-// const allowedOrigins = [
-//   "http://localhost:5173",
-//   "http://localhost:3000",
-//   "https://prop-ease-real-estate-management-sy.vercel.app",
-// ];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://prop-ease-real-estate-management-sy.vercel.app",
+];
 
-// console.log("CORS allowed origins:", allowedOrigins);
+console.log("CORS allowed origins:", allowedOrigins);
 
-// app.use(
-//   cors({
-//     origin: function (origin, callback) {
-//       // Allow requests with no origin (like mobile apps, server-to-server, or same-origin requests)
-//       if (!origin) return callback(null, true);
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, server-to-server, or same-origin requests)
+      if (!origin) return callback(null, true);
 
-//       if (allowedOrigins.includes(origin)) {
-//         return callback(null, true);
-//       }
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
 
-//       console.warn(`⚠️  CORS blocked origin: ${origin}`);
-//       return callback(new Error("Not allowed by CORS"));
-//     },
-//     credentials: true, // Allow cookies & authentication headers
-//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
-
-const corsOptions = {
-  origin: "*", // Allow all origins
-  methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
-  credentials: false, // Must be false when origin is "*"
-};
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+      console.warn(`⚠️  CORS blocked origin: ${origin}`);
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true, // Allow cookies & authentication headers
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(logger);
 
