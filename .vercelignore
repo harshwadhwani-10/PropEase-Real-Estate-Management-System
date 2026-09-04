@@ -1,0 +1,14 @@
+.mongodb_data/
+node_modules/
+api/node_modules/
+client/node_modules/
+docs/
+texts/
+.git/
+.env
+api/.env
+client/.env
+client/dist/
+dist/
+logs/
+*.log
