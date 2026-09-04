@@ -16,13 +16,28 @@ import jwt from "jsonwebtoken";
 
 dotenv.config();
 
-mongoose
-  .connect(process.env.MONGO, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("✅ Connected to MongoDB!"))
-  .catch((err) => console.log("❌ MongoDB Connection Error:", err));
+let isConnected = false;
+const connectDB = async () => {
+  if (isConnected || mongoose.connection.readyState >= 1) {
+    isConnected = true;
+    return;
+  }
+  const mongoUri = process.env.MONGO;
+  if (!mongoUri) {
+    console.warn("⚠️ MONGO URI not found in environment variables");
+    return;
+  }
+  try {
+    const conn = await mongoose.connect(mongoUri);
+    isConnected = conn.connections[0].readyState === 1;
+    console.log("✅ Connected to MongoDB!");
+  } catch (err) {
+    console.error("❌ MongoDB Connection Error:", err.message);
+  }
+};
+
+// Initial connection attempt
+connectDB();
 
 const __dirname = path.resolve();
 const app = express();
@@ -73,10 +88,18 @@ app.get("/debug/cookies", (req, res) => {
   }
 });
 
+// Database connection middleware
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
+
 // Health endpoints
 app.get("/health", (req, res) => {
   return res.json({
     status: "ok",
+    mongoConnected: mongoose.connection.readyState === 1,
+    hasMongoEnv: Boolean(process.env.MONGO),
     uptime: process.uptime(),
     timestamp: Date.now(),
   });
@@ -85,6 +108,8 @@ app.get("/health", (req, res) => {
 app.get("/api/health", (req, res) => {
   return res.json({
     status: "ok",
+    mongoConnected: mongoose.connection.readyState === 1,
+    hasMongoEnv: Boolean(process.env.MONGO),
     uptime: process.uptime(),
     timestamp: Date.now(),
   });
