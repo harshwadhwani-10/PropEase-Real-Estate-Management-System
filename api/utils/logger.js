@@ -5,18 +5,6 @@ import path from "path";
 
 const __dirname = path.resolve();
 
-// Ensure logs directory exists
-const logDirectory = path.join(__dirname, "logs");
-if (!fs.existsSync(logDirectory)) {
-  fs.mkdirSync(logDirectory);
-}
-
-// Create write stream for file logs (append mode)
-const accessLogStream = fs.createWriteStream(
-  path.join(logDirectory, "access.log"),
-  { flags: "a" }
-);
-
 // Define custom Morgan format
 const customFormat = (tokens, req, res) => {
   const timestamp = new Date().toLocaleString("en-IN", {
@@ -37,16 +25,40 @@ const customFormat = (tokens, req, res) => {
   ].join(" ");
 };
 
+let accessLogStream = null;
+
+// Only create file logger in local development (not on read-only serverless platforms like Vercel)
+if (!process.env.VERCEL) {
+  try {
+    const logDirectory = path.join(__dirname, "logs");
+    if (!fs.existsSync(logDirectory)) {
+      fs.mkdirSync(logDirectory, { recursive: true });
+    }
+    accessLogStream = fs.createWriteStream(
+      path.join(logDirectory, "access.log"),
+      { flags: "a" }
+    );
+  } catch (e) {
+    // Ignore file logger creation errors in restricted environments
+  }
+}
+
 /**
- * Unified logger — logs to both console & file simultaneously
+ * Unified logger — logs to console & conditionally to file in local dev
  */
 export const logger = morgan(customFormat, {
   stream: {
     write: (message) => {
-      // Write to console immediately
+      // Always write to console/stdout
       process.stdout.write(message);
-      // Also append to log file
-      accessLogStream.write(message);
+      // Append to file only if stream is available
+      if (accessLogStream) {
+        try {
+          accessLogStream.write(message);
+        } catch (e) {
+          // ignore
+        }
+      }
     },
   },
 });

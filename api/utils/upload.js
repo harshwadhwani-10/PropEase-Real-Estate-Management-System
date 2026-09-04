@@ -7,10 +7,16 @@ import { isCloudinaryConfigured } from "./cloudinary.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Create uploads directory if it doesn't exist (for fallback)
+// Create uploads directory if it doesn't exist (for local fallback only)
 const uploadsDir = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+if (!process.env.VERCEL) {
+  try {
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+  } catch (e) {
+    // ignore
+  }
 }
 
 // File filter
@@ -33,19 +39,20 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Use memoryStorage for Cloudinary (files as buffers)
-// Fallback to diskStorage if Cloudinary not configured
-const storage = isCloudinaryConfigured()
-  ? multer.memoryStorage()
-  : multer.diskStorage({
-      destination: (req, file, cb) => {
-        cb(null, uploadsDir);
-      },
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
-      },
-    });
+// Use memoryStorage for Cloudinary or Serverless (Vercel)
+// Fallback to diskStorage only in local environment without Cloudinary
+const storage =
+  isCloudinaryConfigured() || process.env.VERCEL
+    ? multer.memoryStorage()
+    : multer.diskStorage({
+        destination: (req, file, cb) => {
+          cb(null, uploadsDir);
+        },
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+          cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+        },
+      });
 
 // Configure multer
 export const upload = multer({
@@ -61,4 +68,3 @@ export const uploadSingle = upload.single("file");
 
 // Middleware for multiple files upload
 export const uploadMultiple = upload.array("files", 10); // Max 10 files
-
