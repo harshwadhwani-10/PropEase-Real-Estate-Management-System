@@ -24,15 +24,19 @@
     },
     {
       "src": "/assets/(.*)",
-      "dest": "/assets/$1"
+      "dest": "/client/assets/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/client/assets/favicon-df32b37d.ico"
     },
     {
       "src": "/(.*\\.(?:js|css|ico|png|jpg|jpeg|svg|json|webp|gif|woff|woff2|ttf|eot))",
-      "dest": "/$1"
+      "dest": "/client/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/client/index.html"
     }
   ]
 }
