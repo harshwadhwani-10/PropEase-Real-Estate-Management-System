@@ -128,8 +128,19 @@ export default function Header() {
               >
                 <img
                   className="rounded-full h-10 w-10 object-cover border-2 border-gray-200 hover:border-[#2A4365] transition-colors"
-                  src={currentUser.avatar}
+                  src={
+                    currentUser.avatar ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      (currentUser.username || "U").trim().charAt(0).toUpperCase()
+                    )}&background=2A4365&color=fff&size=200&length=1`
+                  }
                   alt="profile"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      (currentUser.username || "U").trim().charAt(0).toUpperCase()
+                    )}&background=2A4365&color=fff&size=200&length=1`;
+                  }}
                 />
               </Link>
             ) : (
@@ -220,8 +231,19 @@ export default function Header() {
                 >
                   <img
                     className="rounded-full h-8 w-8 object-cover"
-                    src={currentUser.avatar}
+                    src={
+                      currentUser.avatar ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        (currentUser.username || "U").trim().charAt(0).toUpperCase()
+                      )}&background=2A4365&color=fff&size=200&length=1`
+                    }
                     alt="profile"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        (currentUser.username || "U").trim().charAt(0).toUpperCase()
+                      )}&background=2A4365&color=fff&size=200&length=1`;
+                    }}
                   />
                   <span>Profile</span>
                 </Link>

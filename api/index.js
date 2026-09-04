@@ -116,6 +116,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(process.env.PORT, () => {
-  console.log(`🚀 Server is running on Port ${process.env.PORT}!`);
-});
+const port = process.env.PORT || 5000;
+if (!process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`🚀 Server is running on Port ${port}!`);
+  });
+}
+
+export default app;

@@ -259,8 +259,20 @@ export default function Profile() {
             />
             <img
               onClick={() => fileRef.current.click()}
-              src={formData.avatar || currentUser.avatar}
+              src={
+                formData.avatar ||
+                currentUser.avatar ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  (currentUser?.username || "U").trim().charAt(0).toUpperCase()
+                )}&background=2A4365&color=fff&size=200&length=1`
+              }
               alt="profile"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  (currentUser?.username || "U").trim().charAt(0).toUpperCase()
+                )}&background=2A4365&color=fff&size=200&length=1`;
+              }}
               className="rounded-full h-20 w-20 sm:h-24 sm:w-24 object-cover cursor-pointer border-2 border-gray-300 hover:border-slate-700 transition-colors"
             />
             <p className="text-xs sm:text-sm text-center">

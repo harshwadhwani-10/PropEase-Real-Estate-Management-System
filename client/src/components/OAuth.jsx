@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { GoogleAuthProvider, getAuth, signInWithPopup } from "firebase/auth";
-import { app } from "../firebase";
+import { useGoogleLogin } from "@react-oauth/google";
 import { useDispatch } from "react-redux";
 import { signInSuccess } from "../redux/user/userSlice";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../utils/api";
+import axios from "axios";
 import { FaGoogle } from "react-icons/fa";
 
 export default function OAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams] = useSearchParams();
   const nextUrl = searchParams.get("next");
   const [loading, setLoading] = useState(false);
@@ -18,86 +17,68 @@ export default function OAuth() {
   const [selectedRole, setSelectedRole] = useState("buyer");
   const [googleUser, setGoogleUser] = useState(null);
 
-  const handleGoogleClick = async () => {
-    try {
-      setLoading(true);
-      const provider = new GoogleAuthProvider();
-      const auth = getAuth(app);
-
-      const result = await signInWithPopup(auth, provider);
-
-      // Check if user exists
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
       try {
-        const checkRes = await api.get(`/api/user/check-email?email=${encodeURIComponent(result.user.email)}`);
+        setLoading(true);
+        // Fetch user profile from Google using the access token
+        const userInfoRes = await axios.get(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        );
 
-        if (checkRes.data.exists) {
-          // User exists, sign in directly
-          const signInRes = await api.post("/api/auth/google", {
-            name: result.user.displayName,
-            email: result.user.email,
-            photo: result.user.photoURL,
-          });
-          const data = signInRes.data;
-          dispatch(signInSuccess(data));
-          // Redirect to next URL if provided, otherwise go to home
-          const redirectTo = nextUrl || "/";
-          navigate(redirectTo);
-        } else {
-          // User doesn't exist, show role selection modal
+        const { name, email, picture } = userInfoRes.data;
+
+        // Check if user exists
+        try {
+          const checkRes = await api.get(
+            `/api/user/check-email?email=${encodeURIComponent(email)}`
+          );
+
+          if (checkRes.data.exists) {
+            // User exists, sign in directly
+            const signInRes = await api.post("/api/auth/google", {
+              name,
+              email,
+              photo: picture,
+            });
+            dispatch(signInSuccess(signInRes.data));
+            navigate(nextUrl || "/");
+          } else {
+            // User doesn't exist, show role selection modal
+            setGoogleUser({
+              name,
+              email,
+              photo: picture,
+            });
+            setShowRoleModal(true);
+          }
+        } catch (checkError) {
+          // If check fails or not found, show role modal
           setGoogleUser({
-            name: result.user.displayName,
-            email: result.user.email,
-            photo: result.user.photoURL,
+            name,
+            email,
+            photo: picture,
           });
           setShowRoleModal(true);
         }
       } catch (error) {
-        // If check fails, assume new user and show role modal
-        if (error.response?.status === 404) {
-          setGoogleUser({
-            name: result.user.displayName,
-            email: result.user.email,
-            photo: result.user.photoURL,
-          });
-          setShowRoleModal(true);
-        } else {
-          // Other error - try to sign in with default role
-          console.error("Email check error:", error);
-          try {
-            const signInRes = await api.post("/api/auth/google", {
-              name: result.user.displayName,
-              email: result.user.email,
-              photo: result.user.photoURL,
-              role: "buyer",
-            });
-            const data = signInRes.data;
-            dispatch(signInSuccess(data));
-            // Redirect to next URL if provided, otherwise go to home
-            const redirectTo = nextUrl || "/";
-            navigate(redirectTo);
-          } catch (signInError) {
-            console.error("Sign-in error:", signInError);
-            alert(signInError.response?.data?.message || "Failed to sign in with Google");
-          }
-        }
+        console.error("Google sign-in error:", error);
+        alert(error.response?.data?.message || "Failed to sign in with Google");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Firebase authentication error:", error);
-      if (error.code === "auth/popup-closed-by-user") {
-        // User closed the popup, no need to show error
-      } else if (error.code === "auth/popup-blocked") {
-        alert("Popup was blocked. Please allow popups for this site and try again.");
-      } else if (error.code === "auth/unauthorized-domain") {
-        alert("This domain is not authorized. Please check Firebase configuration.");
-      } else if (error.code === "auth/network-request-failed") {
-        alert("Network error. Please check your internet connection and try again.");
-      } else {
-        alert("Failed to sign in with Google. Please try again.");
-      }
-    } finally {
+    },
+    onError: (errorResponse) => {
+      console.error("Google login error:", errorResponse);
       setLoading(false);
-    }
-  };
+      alert("Google sign in failed. Please check your Google credentials and try again.");
+    },
+  });
 
   const handleRoleSubmit = async () => {
     if (!googleUser) return;
@@ -110,12 +91,9 @@ export default function OAuth() {
         photo: googleUser.photo,
         role: selectedRole,
       });
-      const data = res.data;
-      dispatch(signInSuccess(data));
+      dispatch(signInSuccess(res.data));
       setShowRoleModal(false);
-      // Redirect to next URL if provided, otherwise go to home
-      const redirectTo = nextUrl || "/";
-      navigate(redirectTo);
+      navigate(nextUrl || "/");
     } catch (error) {
       console.error("Error creating user with Google:", error);
       alert(error.response?.data?.message || "Failed to create account");
@@ -127,7 +105,10 @@ export default function OAuth() {
   return (
     <>
       <button
-        onClick={handleGoogleClick}
+        onClick={() => {
+          setLoading(true);
+          googleLogin();
+        }}
         type="button"
         disabled={loading}
         className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"

@@ -95,8 +95,23 @@ export const google = async (req, res, next) => {
       return next(errorHandler(400, "Email and name are required"));
     }
 
-    const user = await User.findOne({ email });
+    const initial = (name || "User").trim().charAt(0).toUpperCase() || "U";
+    const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      initial
+    )}&background=2A4365&color=fff&size=200&length=1`;
+
+    let user = await User.findOne({ email });
     if (user) {
+      // If user avatar is missing or using old broken pixabay URL, update it
+      if (
+        photo ||
+        !user.avatar ||
+        user.avatar.includes("pixabay.com")
+      ) {
+        user.avatar = photo || user.avatar || defaultAvatar;
+        await user.save();
+      }
+
       // User exists, sign in
       const token = jwt.sign(
         { id: user._id, role: user.role },
@@ -139,9 +154,7 @@ export const google = async (req, res, next) => {
         username,
         email,
         password: hashedPassword,
-        avatar:
-          photo ||
-          "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+        avatar: photo || defaultAvatar,
         role: userRole,
       });
       await newUser.save();
