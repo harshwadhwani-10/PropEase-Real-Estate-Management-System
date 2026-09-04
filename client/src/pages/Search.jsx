@@ -18,151 +18,15 @@ import LoadingSkeleton from "../components/common/LoadingSkeleton";
 import EmptyState from "../components/common/EmptyState";
 import api from "../utils/api";
 
-export default function Search() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [sidebarData, setSidebarData] = useState({
-    searchTerm: "",
-    type: "all",
-    parking: false,
-    furnished: false,
-    offer: false,
-    sort: "createdAt",
-    order: "desc",
-    minPrice: "",
-    maxPrice: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [listings, setListings] = useState([]);
-  const [showMore, setShowMore] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [expandedSections, setExpandedSections] = useState({
-    type: true,
-    amenities: true,
-    price: true,
-  });
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const searchTermFromUrl = urlParams.get("searchTerm");
-    const typeFromUrl = urlParams.get("type");
-    const parkingFromUrl = urlParams.get("parking");
-    const furnishedFromUrl = urlParams.get("furnished");
-    const offerFromUrl = urlParams.get("offer");
-    const sortFromUrl = urlParams.get("sort");
-    const orderFromUrl = urlParams.get("order");
-    const minPriceFromUrl = urlParams.get("minPrice");
-    const maxPriceFromUrl = urlParams.get("maxPrice");
-
-    if (
-      searchTermFromUrl ||
-      typeFromUrl ||
-      parkingFromUrl ||
-      furnishedFromUrl ||
-      offerFromUrl ||
-      sortFromUrl ||
-      orderFromUrl ||
-      minPriceFromUrl ||
-      maxPriceFromUrl
-    ) {
-      setSidebarData({
-        searchTerm: searchTermFromUrl || "",
-        type: typeFromUrl || "all",
-        parking: parkingFromUrl === "true",
-        furnished: furnishedFromUrl === "true",
-        offer: offerFromUrl === "true",
-        sort: sortFromUrl || "createdAt",
-        order: orderFromUrl || "desc",
-        minPrice: minPriceFromUrl || "",
-        maxPrice: maxPriceFromUrl || "",
-      });
-    }
-
-    const fetchListings = async () => {
-      setLoading(true);
-      setShowMore(false);
-      const searchQuery = urlParams.toString();
-      try {
-        const res = await api.get(`/api/listing/get?${searchQuery}`);
-        const data = res.data;
-        if (data.length > 8) {
-          setShowMore(true);
-        }
-        setListings(data);
-      } catch (error) {
-        console.error("Error fetching listings:", error);
-        setListings([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchListings();
-  }, [location.search]);
-
-  const handleChange = (e) => {
-    const { id, value, type, checked } = e.target;
-
-    if (id === "all" || id === "rent" || id === "sale") {
-      setSidebarData({ ...sidebarData, type: id });
-    } else if (type === "checkbox") {
-      setSidebarData({
-        ...sidebarData,
-        [id]: checked,
-      });
-    } else if (id === "sort_order") {
-      const [sort, order] = value.split("_");
-      setSidebarData({ ...sidebarData, sort, order });
-    } else {
-      setSidebarData({
-        ...sidebarData,
-        [id]: value,
-      });
-    }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const urlParams = new URLSearchParams();
-    if (sidebarData.searchTerm) urlParams.set("searchTerm", sidebarData.searchTerm);
-    if (sidebarData.type !== "all") urlParams.set("type", sidebarData.type);
-    if (sidebarData.parking) urlParams.set("parking", "true");
-    if (sidebarData.furnished) urlParams.set("furnished", "true");
-    if (sidebarData.offer) urlParams.set("offer", "true");
-    urlParams.set("sort", sidebarData.sort);
-    urlParams.set("order", sidebarData.order);
-    if (sidebarData.minPrice) urlParams.set("minPrice", sidebarData.minPrice);
-    if (sidebarData.maxPrice) urlParams.set("maxPrice", sidebarData.maxPrice);
-
-    navigate(`/search?${urlParams.toString()}`);
-    setShowFilters(false);
-  };
-
-  const onShowMoreClick = async () => {
-    const numberOfListings = listings.length;
-    const urlParams = new URLSearchParams(location.search);
-    urlParams.set("startIndex", numberOfListings.toString());
-    const searchQuery = urlParams.toString();
-    try {
-      const res = await api.get(`/api/listing/get?${searchQuery}`);
-      const data = res.data;
-      if (data.length < 9) {
-        setShowMore(false);
-      }
-      setListings([...listings, ...data]);
-    } catch (error) {
-      console.error("Error loading more listings:", error);
-    }
-  };
-
-  const toggleSection = (section) => {
-    setExpandedSections({
-      ...expandedSections,
-      [section]: !expandedSections[section],
-    });
-  };
-
-  const FilterSidebar = () => (
+function FilterSidebar({
+  sidebarData,
+  handleChange,
+  handleSubmit,
+  setShowFilters,
+  expandedSections,
+  toggleSection,
+}) {
+  return (
     <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-24 h-fit border border-gray-100 overflow-hidden">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -379,6 +243,151 @@ export default function Search() {
       </form>
     </div>
   );
+}
+
+export default function Search() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [sidebarData, setSidebarData] = useState({
+    searchTerm: "",
+    type: "all",
+    parking: false,
+    furnished: false,
+    offer: false,
+    sort: "createdAt",
+    order: "desc",
+    minPrice: "",
+    maxPrice: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [listings, setListings] = useState([]);
+  const [showMore, setShowMore] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    type: true,
+    amenities: true,
+    price: true,
+  });
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const searchTermFromUrl = urlParams.get("searchTerm");
+    const typeFromUrl = urlParams.get("type");
+    const parkingFromUrl = urlParams.get("parking");
+    const furnishedFromUrl = urlParams.get("furnished");
+    const offerFromUrl = urlParams.get("offer");
+    const sortFromUrl = urlParams.get("sort");
+    const orderFromUrl = urlParams.get("order");
+    const minPriceFromUrl = urlParams.get("minPrice");
+    const maxPriceFromUrl = urlParams.get("maxPrice");
+
+    if (
+      searchTermFromUrl ||
+      typeFromUrl ||
+      parkingFromUrl ||
+      furnishedFromUrl ||
+      offerFromUrl ||
+      sortFromUrl ||
+      orderFromUrl ||
+      minPriceFromUrl ||
+      maxPriceFromUrl
+    ) {
+      setSidebarData({
+        searchTerm: searchTermFromUrl || "",
+        type: typeFromUrl || "all",
+        parking: parkingFromUrl === "true",
+        furnished: furnishedFromUrl === "true",
+        offer: offerFromUrl === "true",
+        sort: sortFromUrl || "createdAt",
+        order: orderFromUrl || "desc",
+        minPrice: minPriceFromUrl || "",
+        maxPrice: maxPriceFromUrl || "",
+      });
+    }
+
+    const fetchListings = async () => {
+      setLoading(true);
+      setShowMore(false);
+      const searchQuery = urlParams.toString();
+      try {
+        const res = await api.get(`/api/listing/get?${searchQuery}`);
+        const data = res.data;
+        if (data.length > 8) {
+          setShowMore(true);
+        }
+        setListings(data);
+      } catch (error) {
+        console.error("Error fetching listings:", error);
+        setListings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchListings();
+  }, [location.search]);
+
+  const handleChange = (e) => {
+    const { id, value, type, checked } = e.target;
+
+    if (id === "all" || id === "rent" || id === "sale") {
+      setSidebarData({ ...sidebarData, type: id });
+    } else if (type === "checkbox") {
+      setSidebarData({
+        ...sidebarData,
+        [id]: checked,
+      });
+    } else if (id === "sort_order") {
+      const [sort, order] = value.split("_");
+      setSidebarData({ ...sidebarData, sort, order });
+    } else {
+      setSidebarData({
+        ...sidebarData,
+        [id]: value,
+      });
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const urlParams = new URLSearchParams();
+    if (sidebarData.searchTerm) urlParams.set("searchTerm", sidebarData.searchTerm);
+    if (sidebarData.type !== "all") urlParams.set("type", sidebarData.type);
+    if (sidebarData.parking) urlParams.set("parking", "true");
+    if (sidebarData.furnished) urlParams.set("furnished", "true");
+    if (sidebarData.offer) urlParams.set("offer", "true");
+    urlParams.set("sort", sidebarData.sort);
+    urlParams.set("order", sidebarData.order);
+    if (sidebarData.minPrice) urlParams.set("minPrice", sidebarData.minPrice);
+    if (sidebarData.maxPrice) urlParams.set("maxPrice", sidebarData.maxPrice);
+
+    navigate(`/search?${urlParams.toString()}`);
+    setShowFilters(false);
+  };
+
+  const onShowMoreClick = async () => {
+    const numberOfListings = listings.length;
+    const urlParams = new URLSearchParams(location.search);
+    urlParams.set("startIndex", numberOfListings.toString());
+    const searchQuery = urlParams.toString();
+    try {
+      const res = await api.get(`/api/listing/get?${searchQuery}`);
+      const data = res.data;
+      if (data.length < 9) {
+        setShowMore(false);
+      }
+      setListings([...listings, ...data]);
+    } catch (error) {
+      console.error("Error loading more listings:", error);
+    }
+  };
+
+  const toggleSection = (section) => {
+    setExpandedSections({
+      ...expandedSections,
+      [section]: !expandedSections[section],
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -386,7 +395,14 @@ export default function Search() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar - Desktop */}
           <aside className="hidden lg:block w-80 flex-shrink-0">
-            <FilterSidebar />
+            <FilterSidebar
+              sidebarData={sidebarData}
+              handleChange={handleChange}
+              handleSubmit={handleSubmit}
+              setShowFilters={setShowFilters}
+              expandedSections={expandedSections}
+              toggleSection={toggleSection}
+            />
           </aside>
 
           {/* Main Content */}
@@ -409,7 +425,14 @@ export default function Search() {
             {showFilters && (
               <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start">
                 <div className="bg-white w-full max-w-sm h-full overflow-y-auto">
-                  <FilterSidebar />
+                  <FilterSidebar
+                    sidebarData={sidebarData}
+                    handleChange={handleChange}
+                    handleSubmit={handleSubmit}
+                    setShowFilters={setShowFilters}
+                    expandedSections={expandedSections}
+                    toggleSection={toggleSection}
+                  />
                 </div>
               </div>
             )}
